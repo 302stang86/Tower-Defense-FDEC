@@ -189,6 +189,14 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
 
 /* ---- Touch devices: always landscape, full-screen board, HUD on top, command bar along the bottom ---- */
 .rotate { display: none; }
+.menuBtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.menuBtns .go:first-child { grid-column: 1 / -1; }
+.menuBtns .go { margin: 0; min-height: 46px; font-size: 14px; }
+.menuBtns .go:first-child { font-size: 17px; min-height: 52px; }
+html.touch .overlay { position: fixed; inset: 0; z-index: 30; }
+html.touch .card { width: min(560px, 100%); }
+.aud { display: flex; gap: 8px; margin: 12px 0 2px; }
+.aud .go { flex: 1; margin: 0; }
 .a2hs { position: fixed; z-index: 20; left: 50%; transform: translateX(-50%); top: max(46px, calc(env(safe-area-inset-top, 0px) + 40px)); display: flex; align-items: center; gap: 10px; max-width: min(560px, 86vw);
   padding: 8px 10px 8px 14px; border-radius: 12px; font-size: 12.5px; line-height: 1.35; color: #e6edf3; background: rgba(8, 18, 32, 0.94); border: 1px solid rgba(135, 231, 238, 0.5); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5); }
 .a2hs[hidden] { display: none; }
@@ -1268,6 +1276,7 @@ html.touch .dexov { z-index: 30; }
     G.queue.sort((a,b)=>a.due-b.due);
     if(p.q.some(item=>UMAP[item.id].fly))G.cargo.add(G.wave);
     G.banner = { title: (p.boss ? 'BOSS WAVE ' : 'WAVE ') + G.wave, sub: p.label + extra, boss: !!p.boss, life: 220 };
+    SFX.play(p.boss ? 'bossWave' : 'wave'); if (p.boss) SFX.haptic([80, 40, 80]);
   }
   function spawn(item) {
     const d = UMAP[item.id];
@@ -1286,7 +1295,7 @@ html.touch .dexov { z-index: 30; }
   }
   function collectItem() {
     const bonus = Math.max(1, Math.round(G.gold * 0.15));
-    G.gold += bonus; ring(G.item.x, G.item.y, 50, '#ffd24d'); burst(G.item.x, G.item.y, 14, ['#ffd24d', '#fff6c0'], 3, 24, 2.4);
+    G.gold += bonus; SFX.play('coin'); SFX.haptic(20); ring(G.item.x, G.item.y, 50, '#ffd24d'); burst(G.item.x, G.item.y, 14, ['#ffd24d', '#fff6c0'], 3, 24, 2.4);
     G.floats.push({ x: G.item.x, y: G.item.y - 20, text: '+' + bonus + ' bonus', life: 60 });
     G.item = null;
   }
@@ -1329,7 +1338,7 @@ html.touch .dexov { z-index: 30; }
     const t = e.run, dx = t.x - e.x, dy = t.y - e.y, dd = Math.hypot(dx, dy);
     const sp = e.speed * e.spdMul * (1 - (e.teslaSlow || 0));
     if (dd <= BOMB_DROP_DIST + sp) {
-      G.bombs.push({ x: t.x, y: t.y, born: performance.now(), dur: 420, tower: t });
+      G.bombs.push({ x: t.x, y: t.y, born: performance.now(), dur: 420, tower: t }); SFX.play('bombDrop');
       e.run = null; e.bombCd = 300 + Math.floor(Math.random() * 301); // 5-10 s before it can target again
       return false;
     }
@@ -1339,8 +1348,8 @@ html.touch .dexov { z-index: 30; }
   const hitTower = (t, base) => {
     const a = Math.max(1, Math.round(base * 0.75)); // all enemy attacks on towers are 25% weaker
     let rest = a;
-    if (t.shield > 0) { const ab = Math.min(t.shield, rest); t.shield -= ab; rest -= ab; if (t.shield <= 0) { t.shield = 0; G.floats.push({ x: t.x, y: t.y - 40, text: 'shield down', life: 50, colr: '#7fd8ff' }); } }
-    t.hp -= rest; t.hit = 10; G.floats.push({ x: t.x, y: t.y - 26, text: '-' + a, life: 36, colr: '#ff6b6b' });
+    if (t.shield > 0) { const ab = Math.min(t.shield, rest); t.shield -= ab; rest -= ab; if (t.shield <= 0) { t.shield = 0; G.floats.push({ x: t.x, y: t.y - 40, text: 'shield down', life: 50, colr: '#7fd8ff' }); SFX.play('shieldBreak'); } }
+    t.hp -= rest; t.hit = 10; SFX.play('towerHit'); G.floats.push({ x: t.x, y: t.y - 26, text: '-' + a, life: 36, colr: '#ff6b6b' });
   };
   function detected(e){
     if(!e.def.invisible)return true;
@@ -1372,6 +1381,7 @@ html.touch .dexov { z-index: 30; }
     }
     if (!target) { t.ramp = 0; return; }
     t.angle = Math.atan2(target.y - t.y, target.x - t.x);
+    SFX.play(t.type === 'mortar' ? 'mortar' : t.type === 'flame' ? 'flame' : 'solar');
     const live = (e) => e.hp > 0 && detected(e) && !e.burrowed && e.egg <= 0;
     const mx = t.x + Math.cos(t.angle) * 16, my = t.y + Math.sin(t.angle) * 16;
     if (t.type === 'mortar') {
@@ -1476,6 +1486,7 @@ html.touch .dexov { z-index: 30; }
       t.zapT = (t.zapT || 0) - 1;
       if (t.zapT <= 0) { t.zapT = 22;
         const tg = G.enemies.filter((e) => e.hp > 0 && !e.burrowed && Math.hypot(e.x - t.x, e.y - t.y) <= s.range).slice(0, 3);
+        if (tg.length) SFX.play('tesla');
         tg.forEach((e) => { if (e.egg <= 0) { if (e.shield > 0) e.shield = Math.max(0, e.shield - TESLA_SHIELD_DMG); else hurt(e, s.dmg); } G.zaps.push({ x1: t.x, y1: t.y - 20, x2: e.x, y2: e.y, life: 9, max: 9, colr: '#8fe6ff', w: 2, style: 'arc' }); burst(e.x, e.y, 2, ['#bff3ff'], 1.6, 8, 1.6); });
       }
     }
@@ -1508,7 +1519,7 @@ html.touch .dexov { z-index: 30; }
           if (e.boss && !e.noRew) { const gain = Math.max(0, Math.min(3, MAX_LIVES - G.lives)); G.lives += gain; ring(e.x, e.y, 70, '#ff6b6b'); G.floats.push({ x: e.x, y: e.y - e.r - 14, text: gain ? '+' + gain + ' lives' : 'lives maxed', life: 60 }); }
           if (!e.noRew && e.reward) { G.gold += e.reward; G.floats.push({ x: e.x, y: e.y - e.r, text: '+' + e.reward, life: 40 }); }
           if (G.inspect === e) G.inspect = null;
-          G.enemies.splice(i, 1); flierGone(e, true); continue;
+          SFX.play(e.boss ? 'bossDie' : 'die'); G.enemies.splice(i, 1); flierGone(e, true); continue;
         }
       }
       if (e.egg > 0) e.egg--;
@@ -1525,7 +1536,7 @@ html.touch .dexov { z-index: 30; }
       else { e.x += dx / dd * sp; e.y += dy / dd * sp; e.travel += sp; }
       if (Math.abs(dx) > 0.01) e.fx = dx >= 0 ? 1 : -1;
       if (d.segs) { e.trail.push({ x: e.x, y: e.y }); if (e.trail.length > 900) e.trail.shift(); }
-      if (e.idx >= pts.length) { G.lives -= e.cost; if (G.inspect === e) G.inspect = null; G.enemies.splice(i, 1); flierGone(e, false); }
+      if (e.idx >= pts.length) { SFX.play('lifeLost'); SFX.haptic([30, 40, 30]); G.lives -= e.cost; if (G.inspect === e) G.inspect = null; G.enemies.splice(i, 1); flierGone(e, false); }
     }
 
     // Every overlapping flying wave keeps its own cargo carrier.
@@ -2045,6 +2056,108 @@ html.touch .dexov { z-index: 30; }
   window.addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 400); });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', layout);
 
+  /* ---------- Sound + haptics (synthesised in the browser: no audio files) ---------- */
+  const SFX = (() => {
+    let ac = null, master = null, nbuf = null, keep = null, sw = null, recent = [];
+    const lastAt = {}, prefs = { sound: true, haptics: true };
+    try { const v = JSON.parse(localStorage.getItem('switchback-audio') || 'null'); if (v) { prefs.sound = v.sound !== false; prefs.haptics = v.haptics !== false; } } catch (e) {}
+    const save = () => { try { localStorage.setItem('switchback-audio', JSON.stringify(prefs)); } catch (e) {} };
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    function ctx() {
+      if (ac) return ac;
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      try {
+        ac = new C(); master = ac.createGain(); master.gain.value = 0.55;
+        const comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
+        nbuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      } catch (e) { ac = null; }
+      return ac;
+    }
+    // iPhone mutes Web Audio while the ringer switch is silent unless a media element is playing; a silent loop moves audio to the media channel.
+    function keepAlive() {
+      if (keep || !isIOS) return;
+      try { keep = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA='); keep.loop = true; keep.volume = 0.01; const p = keep.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    }
+    function unlock() { const a = ctx(); if (a && a.state !== 'running') a.resume().catch(() => {}); keepAlive(); }
+    function tone(f0, f1, dur, type = 'sine', vol = 0.15, delay = 0) {
+      const t0 = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t0);
+      if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.03);
+    }
+    function noise(dur, vol, ftype, f0, f1, delay = 0, q = 0.9) {
+      const t0 = ac.currentTime + delay, src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = nbuf; f.type = ftype; f.Q.value = q; f.frequency.setValueAtTime(f0, t0); if (f1 && f1 !== f0) f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(f); f.connect(g); g.connect(master); src.start(t0, Math.random() * 0.5); src.stop(t0 + dur + 0.03);
+    }
+    // gap = minimum milliseconds between repeats; pri = always allowed
+    const defs = {
+      mortar:   { gap: 90,  fn: () => { noise(0.14, 0.24, 'lowpass', 900, 200); tone(150, 45, 0.2, 'sine', 0.32); } },
+      flame:    { gap: 120, fn: () => noise(0.12, 0.07, 'bandpass', 900, 450, 0, 0.8) },
+      solar:    { gap: 70,  fn: () => tone(1100, 1500, 0.08, 'triangle', 0.05) },
+      tesla:    { gap: 160, fn: () => { tone(260, 70, 0.13, 'sawtooth', 0.09); noise(0.09, 0.09, 'highpass', 3000, 5200); } },
+      die:      { gap: 45,  fn: () => { noise(0.09, 0.16, 'bandpass', 1200, 400); tone(320, 110, 0.09, 'square', 0.05); } },
+      bossDie:  { gap: 200, pri: 1, fn: () => { noise(0.55, 0.3, 'lowpass', 1200, 100); tone(120, 35, 0.6, 'sine', 0.45); } },
+      towerHit: { gap: 80,  fn: () => { tone(150, 70, 0.08, 'square', 0.06); noise(0.05, 0.06, 'lowpass', 2000, 800); } },
+      shieldBreak: { gap: 150, pri: 1, fn: () => { tone(1500, 300, 0.3, 'triangle', 0.16); noise(0.22, 0.1, 'highpass', 2500, 6000); } },
+      bombDrop: { gap: 200, fn: () => tone(1400, 380, 0.42, 'sine', 0.07) },
+      freeze:   { gap: 150, pri: 1, fn: () => { noise(0.32, 0.13, 'highpass', 3500, 7000); tone(2200, 1600, 0.26, 'triangle', 0.06); } },
+      nukeLaunch: { gap: 400, pri: 1, fn: () => tone(300, 1800, 0.62, 'sawtooth', 0.05) },
+      nukeBoom: { gap: 400, pri: 1, fn: () => { noise(1.1, 0.5, 'lowpass', 1400, 60); tone(95, 28, 1.0, 'sine', 0.65); } },
+      place:    { gap: 60,  pri: 1, fn: () => { tone(330, 0, 0.09, 'square', 0.07); tone(495, 0, 0.11, 'square', 0.07, 0.07); } },
+      upgrade:  { gap: 100, pri: 1, fn: () => [392, 523, 659, 784].forEach((f, i) => tone(f, 0, 0.12, 'triangle', 0.1, i * 0.06)) },
+      shield:   { gap: 100, pri: 1, fn: () => { tone(500, 1000, 0.3, 'sawtooth', 0.05); tone(1000, 1200, 0.3, 'triangle', 0.08, 0.12); } },
+      repair:   { gap: 100, pri: 1, fn: () => { tone(700, 0, 0.06, 'square', 0.05); tone(900, 0, 0.06, 'square', 0.05, 0.08); } },
+      coin:     { gap: 100, pri: 1, fn: () => { tone(988, 0, 0.08, 'square', 0.06); tone(1319, 0, 0.22, 'square', 0.06, 0.07); } },
+      wave:     { gap: 500, pri: 1, fn: () => { tone(196, 0, 0.35, 'sawtooth', 0.09); tone(247, 0, 0.5, 'sawtooth', 0.09, 0.3); } },
+      bossWave: { gap: 500, pri: 1, fn: () => { for (let i = 0; i < 3; i++) tone(98, 90, 0.4, 'sawtooth', 0.15, i * 0.5); noise(1.6, 0.14, 'lowpass', 300, 120); } },
+      lifeLost: { gap: 150, pri: 1, fn: () => { tone(220, 70, 0.36, 'sawtooth', 0.12); noise(0.22, 0.14, 'lowpass', 600, 150); } },
+      gameOver: { gap: 1000, pri: 1, fn: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0, 0.35, 'triangle', 0.14, i * 0.28)) },
+      select:   { gap: 40,  pri: 1, fn: () => tone(900, 0, 0.045, 'sine', 0.07) },
+      ui:       { gap: 40,  pri: 1, fn: () => tone(600, 0, 0.035, 'sine', 0.05) }
+    };
+    function play(name) {
+      if (!prefs.sound) return;
+      const d = defs[name]; if (!d) return;
+      const a = ctx(); if (!a || a.state !== 'running') return;
+      const now = performance.now(); if (now - (lastAt[name] || 0) < d.gap) return;
+      recent = recent.filter((x) => now - x < 120); if (recent.length >= 9 && !d.pri) return;
+      recent.push(now); lastAt[name] = now;
+      try { d.fn(); } catch (e) {}
+    }
+    function haptic(ms) {
+      if (!prefs.haptics) return;
+      try {
+        if (navigator.vibrate) { navigator.vibrate(ms); return; }
+        if (!isIOS) return; // iOS 17.4+ Safari: toggling a hidden "switch" checkbox gives a light tap
+        if (!sw) { const l = document.createElement('label'); l.style.cssText = 'position:fixed;left:-60px;top:0;width:1px;height:1px;opacity:0.02;pointer-events:none'; const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); l.appendChild(i); document.body.appendChild(l); sw = l; }
+        sw.click();
+      } catch (e) {}
+    }
+    ['pointerdown', 'touchend', 'keydown'].forEach((n) => document.addEventListener(n, unlock, { passive: true }));
+    return {
+      play, haptic, unlock,
+      get sound() { return prefs.sound; }, get haptics() { return prefs.haptics; },
+      setSound(v) { prefs.sound = v; save(); if (v) { unlock(); setTimeout(() => play('ui'), 60); } },
+      setHaptics(v) { prefs.haptics = v; save(); if (v) haptic(20); }
+    };
+  })();
+  // Sound and vibration switches shown on the menu screens
+  function audioControls() {
+    return '<div class="aud"><button class="go alt" id="sndBtn" type="button"></button><button class="go alt" id="hapBtn" type="button"></button></div>';
+  }
+  function bindAudioControls() {
+    const sb = $('sndBtn'), hb = $('hapBtn'); if (!sb || !hb) return;
+    const paint = () => { sb.textContent = 'Sound: ' + (SFX.sound ? 'On' : 'Off'); hb.textContent = 'Vibration: ' + (SFX.haptics ? 'On' : 'Off'); sb.setAttribute('aria-pressed', SFX.sound); hb.setAttribute('aria-pressed', SFX.haptics); };
+    sb.addEventListener('click', () => { SFX.setSound(!SFX.sound); paint(); });
+    hb.addEventListener('click', () => { SFX.setHaptics(!SFX.haptics); paint(); });
+    paint();
+  }
+  // every button press gets a tick
+  document.addEventListener('click', (e) => { const b = e.target && e.target.closest && e.target.closest('button'); if (b && b.id !== 'sndBtn' && b.id !== 'hapBtn') { SFX.play('ui'); SFX.haptic(8); } });
+
   /* ---------- Full screen + landscape lock (phones) ---------- */
   const fsEl = document.documentElement, fsReq = fsEl.requestFullscreen || fsEl.webkitRequestFullscreen;
   const inFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
@@ -2091,6 +2204,7 @@ html.touch .dexov { z-index: 30; }
     if(G.awaitingFirstTower){G.awaitingFirstTower=false;G.breakT=180;}
     G.selected = null; build.ghost = null;
     build.on = false; // one tower per Build press; the next tap selects towers again
+    SFX.play('place'); SFX.haptic(25);
     return true;
   }
   function tapField(ev) {
@@ -2104,7 +2218,7 @@ html.touch .dexov { z-index: 30; }
     if (markerHit(sx, sy, touch)) { doUpgrade(); return; }
     let hit = null;
     for (const t of [...G.towers].reverse()) if (screenHit(t,12,TOWER_R)) { hit=t;break; }
-    if (hit) { G.selected = hit; G.inspect = null; build.on = false; build.ghost = null; return; }
+    if (hit) { G.selected = hit; G.inspect = null; build.on = false; build.ghost = null; SFX.play('select'); SFX.haptic(14); return; }
     if (build.on) {
       if (touch) {
         const g = build.ghost;
@@ -2195,10 +2309,10 @@ html.touch .dexov { z-index: 30; }
   }
   function doUpgrade() {
     const t = G.selected;
-    if (t && TMAP[t.type].slows) { const r = repairCost(t); if (r != null && G.gold >= r && !G.over) { G.gold -= r; t.hp = towerMax(t); ring(t.x, t.y, 40, '#5ad7ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'repaired', life: 40, colr: '#5ad7ff' }); } return; }
+    if (t && TMAP[t.type].slows) { const r = repairCost(t); if (r != null && G.gold >= r && !G.over) { G.gold -= r; t.hp = towerMax(t); SFX.play('repair'); SFX.haptic(20); ring(t.x, t.y, 40, '#5ad7ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'repaired', life: 40, colr: '#5ad7ff' }); } return; }
     const sm = t && markerInfo(t);
-    if (sm && sm.shield) { if (sm.ok && !G.over) { G.gold -= SHIELD_COST; t.shield = t.shieldMax = towerMax(t); ring(t.x, t.y, 44, '#7fd8ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'shield up', life: 40, colr: '#7fd8ff' }); } return; }
-    const k = t && upgradeCost(t); if (t && k != null && G.gold >= k && !G.over) { G.gold -= k; upgrade(t); } }
+    if (sm && sm.shield) { if (sm.ok && !G.over) { G.gold -= SHIELD_COST; t.shield = t.shieldMax = towerMax(t); SFX.play('shield'); SFX.haptic(25); ring(t.x, t.y, 44, '#7fd8ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'shield up', life: 40, colr: '#7fd8ff' }); } return; }
+    const k = t && upgradeCost(t); if (t && k != null && G.gold >= k && !G.over) { G.gold -= k; upgrade(t); SFX.play('upgrade'); SFX.haptic(25); } }
   const NUKE_COST=1000,NUKE_RADIUS=HEX_X*6,NUKE_DAMAGE=5000,NUKE_COOLDOWN=15000;
   function doNuke(){
     if(!G.started||G.over||G.paused||codexOpen||G.gold<NUKE_COST||performance.now()<G.nukeReadyAt)return;
@@ -2208,7 +2322,7 @@ html.touch .dexov { z-index: 30; }
     const now=performance.now();
     if(!G.nukeAim||G.over||G.paused||G.gold<NUKE_COST||now<G.nukeReadyAt||x<0||x>W||y<0||y>H)return false;
     G.gold-=NUKE_COST;G.nukeReadyAt=now+NUKE_COOLDOWN;G.nukeAim=false;
-    G.nukes.push({x,y,born:now,hit:false});return true;
+    G.nukes.push({x,y,born:now,hit:false});SFX.play('nukeLaunch');SFX.haptic(40);return true;
   }
   function updateBombs(now) {
     for (const b of G.bombs) if (!b.done && now - b.born >= b.dur) {
@@ -2216,7 +2330,7 @@ html.touch .dexov { z-index: 30; }
       const t = b.tower;
       if (t && t.hp > 0 && G.towers.includes(t)) {
         t.frozenUntil = now + 2000 + Math.random() * 1000; // 2-3 seconds real time
-        ring(t.x, t.y, 46, '#bfeaff'); G.floats.push({ x: t.x, y: t.y - 40, text: 'frozen', life: 50, colr: '#bfeaff' });
+        ring(t.x, t.y, 46, '#bfeaff'); G.floats.push({ x: t.x, y: t.y - 40, text: 'frozen', life: 50, colr: '#bfeaff' }); SFX.play('freeze');
       }
     }
     G.bombs = G.bombs.filter((b) => now - b.born < b.dur + 200);
@@ -2233,7 +2347,7 @@ html.touch .dexov { z-index: 30; }
     for(const n of G.nukes)if(!n.hit&&now-n.born>=650){
       n.hit=true;
       for(const e of G.enemies)if(!e.fly&&e.hp>0&&Math.hypot(e.x-n.x,e.y-n.y)<=NUKE_RADIUS)hurt(e,NUKE_DAMAGE,{melt:true,pierceShield:true});
-      ring(n.x,n.y,NUKE_RADIUS,'#ffd58a');G.shake=Math.max(G.shake,9);
+      ring(n.x,n.y,NUKE_RADIUS,'#ffd58a');G.shake=Math.max(G.shake,9);SFX.play('nukeBoom');SFX.haptic([60,30,60]);
     }
     G.nukes=G.nukes.filter(n=>now-n.born<4200);
   }
@@ -2426,16 +2540,18 @@ html.touch .dexov { z-index: 30; }
     if (el.dataset.v !== info) { el.dataset.v = info; el.innerHTML = info; }
   }
   const overlay = $('overlay'), card = $('card');
+  if (IS_TOUCH) document.body.appendChild(overlay); // menus sit above the HUD and command bar on phones
   function showIntro() {
     card.innerHTML = '<h1>Switchback Defense</h1><p>Hold the line against 85 enemy types, on two converging routes, medium escort bosses, and 10 major bosses. Build on hex cells. Place your first tower to start the wave countdown. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' +
+      '<div class="menuBtns"><button class="go" id="goBtn">Start</button><button class="go alt" id="dexBtn">Open Codex</button><button class="go alt" id="sndBtn" type="button"></button><button class="go alt" id="hapBtn" type="button"></button></div>' +
       '<ul><li>Pick from three fire towers, each with three tiers, plus a Tesla coil that zaps, slows and reveals every enemy in range. Every upgrade costs more than the last, and a maxed tower can be mastered. The coil cannot be upgraded; repair it with gold instead. Special Attack costs $1,000 and launches a ground-only nuclear strike, with a 15-second real-time cooldown.</li>' +
       '<li>Every tower has health and every enemy can attack it, each pausing two to five seconds between strikes. Towers cannot be repaired, but any upgrade restores full health. After wave 30, some individual ground enemies spawn with a shield worth twice their health; Tesla zaps strip shields fastest. After five seconds in the air, flyers divert to the nearest tower and drop a freeze bomb that stops it firing for two to three seconds. A fully upgraded tower can buy a $500 shield equal to its total health; buy a new one once it breaks.</li>' +
       '<li>Waves overlap after 20 game seconds if enemies remain. Clearing the field early starts a three-second break.</li>' +
       '<li>One flier in each flying wave carries cargo. Destroy the last flier and the crate drops: tap it within three seconds for a bonus of 15% of your cash.</li>' +
       '<li>New units unlock as you survive. Open the Codex from this menu to read about each one.</li>' +
       '<li>Keys: B build, U upgrade, S special attack, N send wave, F speed, 1–4 pick tower, Space pause. The Codex is available from this menu.</li></ul>' +
-      '<button class="go" id="goBtn">Start</button><button class="go alt" id="dexBtn">Open Codex</button>';
-    overlay.hidden = false;
+      '';
+    overlay.hidden = false; bindAudioControls();
     $('goBtn').addEventListener('click', start); $('dexBtn').addEventListener('click', () => openCodex(true));
   }
   function endGame() {
@@ -2443,8 +2559,8 @@ html.touch .dexov { z-index: 30; }
     G.over = true;
     if (G.wave > best) { best = G.wave; try { localStorage.setItem('switchback-best', String(best)); } catch (e) {} }
     card.innerHTML = '<h1>Line breached</h1><div><p>You reached wave</p><div class="big">' + G.wave + '</div></div>' +
-      '<p>Best on this device: wave ' + best + '</p><button class="go" id="goBtn">Play again</button><button class="go alt" id="dexBtn">Open Codex</button>';
-    overlay.hidden = false;
+      '<p>Best on this device: wave ' + best + '</p>' + audioControls() + '<button class="go" id="goBtn">Play again</button><button class="go alt" id="dexBtn">Open Codex</button>';
+    overlay.hidden = false; bindAudioControls(); SFX.play('gameOver');
     $('goBtn').addEventListener('click', start); $('dexBtn').addEventListener('click', () => openCodex(true));
   }
   function start() { reset(); G.started = true; overlay.hidden = true; }
