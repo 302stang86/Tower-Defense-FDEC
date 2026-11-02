@@ -81,7 +81,7 @@ button { font: inherit; color: inherit; }
 .act .s { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .act:disabled { opacity: 0.4; cursor: default; }
 .act.on { border-color: var(--tower); box-shadow: inset 0 0 0 1px var(--tower); }
-#bSell .l { color: #ff9a9a; }
+#bNuke .l { color: #ff9a9a; }
 #bUp .l { color: var(--tower2); }
 #bBuild .l { color: var(--tower); }
 button:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
@@ -258,7 +258,7 @@ html.touch .dexov { z-index: 30; }
   <div class="btns">
     <button class="act" id="bBuild"><span class="l">Build</span><span class="s" id="sBuild">$100</span></button>
     <button class="act" id="bUp"><span class="l">Upgrade</span><span class="s" id="sUp">$70</span></button>
-    <button class="act" id="bSell"><span class="l">Sell</span><span class="s" id="sSell">select tower</span></button>
+    <button class="act" id="bNuke"><span class="l">Special Attack</span><span class="s" id="sNuke">$1,000 · Nuke</span></button>
     <button class="act" id="bNext"><span class="l">Send wave</span><span class="s" id="sNext">now</span></button>
   </div>
 </footer>
@@ -515,8 +515,24 @@ html.touch .dexov { z-index: 30; }
       base: 'brute', art: { a: '#2a1414', b: '#14090a', c: '#ff3a14', m: '#3a2020', gears: ['horns', 'cracks', 'crown', 'eyes3', 'plates'] } }
   ];
   BOSSES.forEach((b,i) => { b.boss = 1; b.level=(i+1)*10; });
+  const INVISIBLE_UNITS=[
+    ['veil_runner','Veil Runner','person',180,35,2.5,11,6,['hood','blades']],
+    ['phantom_stalker','Phantom Stalker','person',260,55,2.2,12,12,['cloak','hood','claws']],
+    ['specter_knight','Specter Knight','person',420,65,1.5,14,18,['helm','shield']],
+    ['wraith_crawler','Wraith Crawler','crawler',500,85,1,17,24,[]],
+    ['shade_brute','Shade Brute','brute',750,100,.85,20,32,['plates','horns']]
+  ].map(([id,name,base,hp,dmg,spd,r,from,gears])=>({id,name,base,hp,dmg,spd,r,from:Math.max(16,from),level:Math.max(16,from),range:base==='crawler'?4:1.5,
+    sw:spd>2?'Fast':spd<1.2?'Slow':'Normal',invisible:1,role:'Invisible',
+    desc:'Concealed ground unit. A living Tesla reveals it, with a 3-second real-time reveal period after it leaves range.',
+    play:'Appears after wave 15. Tesla reveals it; it stays vulnerable for 3 real seconds after leaving range, then conceals again.',
+    art:{a:'#687b91',b:'#293447',c:'#90e4f4',m:'#a8bccd',gears}}));
+  UNITS.push(...INVISIBLE_UNITS);UNITS.sort(rosterOrder);
+  const MEDIUM_BOSSES=[{id:'siege_warden',name:'Siege Warden',role:'Medium Escort Boss',medium:1,boss:1,level:5,from:5,
+    hp:4200,dmg:110,range:2,sw:'Slow',r:23,armor:.15,
+    desc:'A fortified ground commander that advances with the troops every fifth wave.',play:'Appears on waves 5, 10, 15 and onward.',
+    base:'brute',art:{a:'#566475',b:'#242e3c',c:'#ffb760',m:'#9aa8b5',gears:['plates','hammer','crown']}}];
   const UMAP = {};
-  UNITS.concat(BOSSES).forEach((d) => { UMAP[d.id] = d; });
+  UNITS.concat(BOSSES,MEDIUM_BOSSES).forEach((d) => { UMAP[d.id] = d; });
 
   /* ---------- Tower data: 5 towers x 3 tiers (cost = price of that tier; upgrades pay the tier's cost) ---------- */
   const SC = 1.0; // codex damage used as written
@@ -539,17 +555,17 @@ html.touch .dexov { z-index: 30; }
         { name: 'Hellfire Dragon Head', look: 'Forged mechanical dragon maw vomiting pressurized liquid blue fire', dmg: 75, dps: 1, range: 4.5, rate: 'Extreme', cost: 400, burn: 5, melt: 1 }
       ] },
     { id: 'solar', name: 'Solar Beam Tower', col: '#ffd24d', detect: 1,
-      desc: 'Harnesses focused light and stellar radiation to burn single targets with supreme accuracy.', play: 'Hits air and ground. Sees stealth units at any range.',
+      desc: 'Harnesses focused light and stellar radiation to burn single targets with supreme accuracy.', play: 'Hits air and ground. Invisible-class enemies still require Tesla detection.',
       tiers: [
         { name: 'Glass Array', look: 'Simple array of curved magnifying lenses focusing sunlight', dmg: 30, range: 5.0, rate: 'Medium', cd: 55, cost: 120 },
         { name: 'Helios Prism', look: 'Polished golden metallic spire refracting concentrated solar rays', dmg: 70, range: 7.0, rate: 'Medium', cd: 55, cost: 300, ramp: 1 },
         { name: 'Solar Flare Beacon', look: 'Orbital satellite uplink beacon beaming blinding golden solar death rays', dmg: 150, range: 10.0, rate: 'Fast', cd: 35, cost: 650, ramp: 1, pierceShield: 1 }
       ] }
     ,{ id: 'tesla', name: 'Tesla Coil', col: '#5ad7ff', slows: 1,
-      desc: 'Crackling coil that bleeds the speed out of everything near it, on the ground or in the air. It never attacks and cannot be upgraded; damaged coils are repaired for gold.',
-      play: 'Slows every enemy in range, flyers included. Repair instead of upgrade.',
+      desc: 'Crackling coil that bleeds the speed out of everything near it, on the ground or in the air. It also discharges arcs of electricity into up to three (3) enemies at a time, and exposes concealed enemies while they stand in range. It cannot be upgraded; damaged coils are repaired for gold.',
+      play: 'Electrical attack, slows every enemy in range (flyers included) and reveals invisible enemies. Repair instead of upgrade.',
       tiers: [
-        { name: 'Tesla Coil', look: 'Copper-wound pylon crowned with an arcing plasma orb', dmg: 0, range: 4.0, rate: 'Aura', cost: 160, slow: 0.4 }
+        { name: 'Tesla Coil', look: 'Copper-wound pylon crowned with an arcing plasma orb', dmg: 14, range: 4.0, rate: 'Arc + Aura', cost: 160, slow: 0.4 }
       ] }
   ];
   const TMAP = {};
@@ -953,7 +969,7 @@ html.touch .dexov { z-index: 30; }
     Object.assign(G, {
       enemies: [], towers: [], beams: [], floats: [], rings: [], zaps: [], parts: [], shells: [], shake: 0, selected: null, inspect: null, banner: null, flash: 0, t: 0,
       gold: 250, lives: 20, wave: 0, waveTicks: 0, queue: [], spawnT: 0, breakT: 180, isBreak: true, awaitingFirstTower: true,
-      over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: new Set()
+      over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: new Set(), nukeAim:false, nukeTarget:null, nukeReadyAt:0, nukes:[]
     });
     build.on = false; build.ghost = null;
   }
@@ -986,7 +1002,7 @@ html.touch .dexov { z-index: 30; }
   const reachOf = (e) => e.def.reach || Math.max(58, e.def.range * TILE + 22);
   const ATK_GAP = 120; // two seconds between attacks
   // base health by tier and mastery, plus a further 10% of it for every upgrade the tower has received
-  const towerMax = (t) => Math.round((TMAP[t.type].slows ? 1.25 : 1) * ([400, 650, 950][t.tier - 1] + 120 * t.mastery) * (1 + 0.1 * (t.tier - 1 + t.mastery)));
+  const towerMax = (t) => Math.round((TMAP[t.type].slows ? 1.875 : 1) * ([400, 650, 950][t.tier - 1] + 120 * t.mastery) * (1 + 0.1 * (t.tier - 1 + t.mastery)));
   // random 2-5 second pause between a regular enemy's attacks; bosses keep their slower fixed rhythm
   const nextGap = (e) => (e.boss ? ATK_GAP : 120 + Math.floor(Math.random() * 181));
   const repairCost = (t) => { const mx = towerMax(t); return t.hp >= mx ? null : Math.max(10, Math.round(TMAP[t.type].tiers[0].cost * 0.8 * (1 - t.hp / mx) / 5) * 5); };
@@ -1006,6 +1022,7 @@ html.touch .dexov { z-index: 30; }
     e.speed = d.boss ? SPW[d.sw] * (0.85 + 0.003 * w) : d.spd * 0.9 * speedFactor(w);
     if (e.fly) e.speed *= 0.75; // flyers move at three quarters speed
     e.reward = o.summon ? 0 : d.boss ? Math.round(50 + w * 4) : Math.round((8 + w * 0.6) * clamp(Math.sqrt(d.hp / 220), 0.6, 1.8));
+    if(!o.summon)e.reward+=5; // Additional cash on rewarded kills, including bosses.
     e.cost = o.summon ? 1 : d.boss ? Math.max(3, Math.round(d.dmg / 60)) : Math.max(1, Math.round(d.dmg / 40));
     if (d.shield) { e.shield = Math.round(d.shield * bm); e.shieldMax = e.shield; }
     if (d.heal) e.healAmt = d.heal * bm;
@@ -1023,7 +1040,7 @@ html.touch .dexov { z-index: 30; }
   const upgradeCost = (t) => (TMAP[t.type].slows ? null : t.tier < 3 || t.mastery < MASTERY_MAX ? upCost(t.type, t.tier - 1 + t.mastery) : null);
   // Towers cannot be repaired, but any upgrade rebuilds one to full health
   const upgrade = (t) => { const k = upgradeCost(t); if (k == null) return; t.invested += k; if (t.tier < 3) t.tier++; else t.mastery++; t.hp = towerMax(t); };
-  const sellValue = (t) => Math.floor(t.invested / 2);
+
 
   function distSeg(px, py, a, b) {
     const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
@@ -1066,10 +1083,7 @@ html.touch .dexov { z-index: 30; }
   /* ---------- Wave planning ---------- */
   const wgt = (u) => (u.hp / 250) * Math.pow(u.spd / 1.8, 0.4);
   function planWave(w) {
-    if (w % 10 === 0) {
-      const b = BOSSES[(w / 10 - 1) % BOSSES.length];
-      return { boss: b, q: [{ id: b.id, gap: 1 }], label: b.name + ' · ' + b.role };
-    }
+    const major=w%10===0?BOSSES[(w/10-1)%BOSSES.length]:null;
     // flying units never appear before wave 6
     const first = (u) => (u.fly ? Math.max(u.from, 6) : u.from);
     const pool = UNITS.filter((u) => first(u) <= w), debut = UNITS.filter((u) => first(u) === w);
@@ -1086,7 +1100,7 @@ html.touch .dexov { z-index: 30; }
       parts.push((isNew ? 'NEW ' : '') + u.name + ' ×' + n);
     });
     for(let i=q.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[q[i],q[j]]=[q[j],q[i]];}
-    const schedule=q.slice(0,70);
+    const schedule=q.slice(0,68);
     let groupRemaining=0;
     schedule.forEach((item,i)=>{
       if(i===0)item.gap=1;
@@ -1094,7 +1108,9 @@ html.touch .dexov { z-index: 30; }
       else if(Math.random()<.38){groupRemaining=1+Math.floor(Math.random()*4);item.gap=65+Math.floor(Math.random()*81);}
       else item.gap=32+Math.floor(Math.random()*59);
     });
-    return { q:schedule,label:'Level '+w+' · '+parts.join(' · ') };
+    if(w%5===0){schedule.splice(Math.max(1,Math.floor(schedule.length/2)),0,{id:MEDIUM_BOSSES[0].id,gap:80});parts.push('Siege Warden escort');}
+    if(major){schedule.push({id:major.id,gap:100});parts.push(major.name);}
+    return {boss:major,q:schedule,label:'Level '+w+' · '+parts.join(' · ')};
 
   }
   const WAVE_OVERLAP_TICKS=20*60; // 20 game seconds; pauses and speed controls apply.
@@ -1153,8 +1169,15 @@ html.touch .dexov { z-index: 30; }
     const a = Math.max(1, Math.round(base * 0.75)); // all enemy attacks on towers are 25% weaker
     t.hp -= a; t.hit = 10; G.floats.push({ x: t.x, y: t.y - 26, text: '-' + a, life: 36, colr: '#ff6b6b' });
   };
+  function detected(e){
+    if(!e.def.invisible)return true;
+    const inside=G.towers.some(t=>t.type==='tesla'&&t.hp>0&&Math.hypot(t.x-e.x,t.y-e.y)<=tstat(t).range);
+    if(inside){e.inTesla=true;return true;}
+    if(e.inTesla){e.inTesla=false;e.revealedUntil=performance.now()+3000;}
+    return performance.now()<(e.revealedUntil||0);
+  }
   function hurt(e, dmg, o = {}) {
-    if (e.egg > 0) return;
+    if (e.egg > 0 || !detected(e)) return;
     let d = dmg * (o.melt ? 1 : 1 - e.armor) * (1 - e.guard);
     if (e.shield > 0 && !o.pierceShield) { const a = Math.min(e.shield, d); e.shield -= a; d -= a; }
     e.hp -= d;
@@ -1163,12 +1186,12 @@ html.touch .dexov { z-index: 30; }
       burst(e.x,e.y,4,['#fff2c3','#ffb95d','#ef704a'],1.8,12,1.5);
     }
   }
-  function burn(e, dps, secs) { e.burnDps = Math.max(e.burnDps || 0, dps); e.burnT = secs * 60; }
+  function burn(e, dps, secs) { if(!detected(e))return; e.burnDps = Math.max(e.burnDps || 0, dps); e.burnT = secs * 60; }
   function fireTower(t) {
     const s = tstat(t), b = s.b, d = s.d;
     let target = null, rem = 1e9;
     for (const e of G.enemies) {
-      if (e.hp <= 0 || e.burrowed || e.egg > 0 || (d.ground && e.fly)) continue;
+      if (e.hp <= 0 || !detected(e) || e.burrowed || e.egg > 0 || (d.ground && e.fly)) continue;
       const dd = Math.hypot(e.x - t.x, e.y - t.y);
       if (dd > s.range || (e.def.stealth && t.tier < 2 && !d.detect && dd > 70)) continue;
       const r = e.total - e.travel;
@@ -1176,7 +1199,7 @@ html.touch .dexov { z-index: 30; }
     }
     if (!target) { t.ramp = 0; return; }
     t.angle = Math.atan2(target.y - t.y, target.x - t.x);
-    const live = (e) => e.hp > 0 && !e.burrowed && e.egg <= 0;
+    const live = (e) => e.hp > 0 && detected(e) && !e.burrowed && e.egg <= 0;
     const mx = t.x + Math.cos(t.angle) * 16, my = t.y + Math.sin(t.angle) * 16;
     if (t.type === 'mortar') {
       const dd = dist(t, target), dur = Math.round(24 + dd / 9);
@@ -1217,7 +1240,7 @@ html.touch .dexov { z-index: 30; }
   }
   function special(e) {
     const d = e.def;
-    if (e.boss && e.waveNumber < BOSS_ATK_WAVE && !['summon', 'queen'].includes(d.sp)) return;
+    if (e.boss && !e.def.medium && e.waveNumber < BOSS_ATK_WAVE && !['summon', 'queen'].includes(d.sp)) return;
     const near = (r) => G.towers.filter((t) => Math.hypot(t.x - e.x, t.y - e.y) <= r);
     switch (d.sp) {
       case 'summon': summon(e, 'fire_wisp', 5 + Math.floor(e.waveNumber / 15)); ring(e.x, e.y, 60, '#ff9a3a'); break;
@@ -1239,7 +1262,7 @@ html.touch .dexov { z-index: 30; }
     const d = e.def;
     if (e.atkT > 0) { e.atkT -= e.boss ? 0.55 : 1; return; } // bosses strike slowly
     if (!d.dmg || e.burrowed || e.egg > 0) return;
-    if (e.boss && e.waveNumber < BOSS_ATK_WAVE) return;
+    if (e.boss && !e.def.medium && e.waveNumber < BOSS_ATK_WAVE) return;
     const reach = reachOf(e), cand = G.towers.filter((t) => Math.hypot(t.x - e.x, t.y - e.y) <= reach);
     if (!cand.length) return;
     if (d.kamikaze) {
@@ -1277,9 +1300,10 @@ html.touch .dexov { z-index: 30; }
       if (t.type !== 'tesla' || t.hp <= 0) continue;
       const s = tstat(t);
       for (const e of G.enemies) if (e.hp > 0 && Math.hypot(e.x - t.x, e.y - t.y) <= s.range) e.teslaSlow = Math.max(e.teslaSlow, s.b.slow);
-      if ((G.t + t.x) % 22 === 0) {
+      t.zapT = (t.zapT || 0) - 1;
+      if (t.zapT <= 0) { t.zapT = 22;
         const tg = G.enemies.filter((e) => e.hp > 0 && !e.burrowed && Math.hypot(e.x - t.x, e.y - t.y) <= s.range).slice(0, 3);
-        tg.forEach((e) => { G.zaps.push({ x1: t.x, y1: t.y - 20, x2: e.x, y2: e.y, life: 9, max: 9, colr: '#8fe6ff', w: 2, style: 'arc' }); burst(e.x, e.y, 2, ['#bff3ff'], 1.6, 8, 1.6); });
+        tg.forEach((e) => { if (e.egg <= 0) hurt(e, s.dmg); G.zaps.push({ x1: t.x, y1: t.y - 20, x2: e.x, y2: e.y, life: 9, max: 9, colr: '#8fe6ff', w: 2, style: 'arc' }); burst(e.x, e.y, 2, ['#bff3ff'], 1.6, 8, 1.6); });
       }
     }
     for (const t of G.towers) { if (t.slowT > 0) t.slowT--; if (t.hit > 0) t.hit--; if (t.flash > 0) t.flash--; }
@@ -1304,7 +1328,7 @@ html.touch .dexov { z-index: 30; }
     for (let i = G.enemies.length - 1; i >= 0; i--) {
       const e = G.enemies[i], d = e.def;
       e.age++;
-      if (e.burnT > 0) { e.burnT--; if (e.egg <= 0) e.hp -= e.burnDps / 60; }
+      if (e.burnT > 0) { e.burnT--; if (e.egg <= 0 && detected(e)) e.hp -= e.burnDps / 60; }
       if (e.hp <= 0) {
         if (d.revive && !e.revived) { e.revived = true; e.egg = 110; e.hp = Math.round(e.maxHp * 0.5); ring(e.x, e.y, 70, '#ffb030'); }
         else {
@@ -1399,7 +1423,7 @@ html.touch .dexov { z-index: 30; }
   }
   function isoEnemy(e) {
     // Contact shadows stay on the sloped ground, figures remain vertical.
-    c=ctx; ctx.globalAlpha=.3; ell(e.x+4,e.y+4,e.r*1.1,e.r*.8,'#000'); ctx.globalAlpha=1;
+    c=ctx; ctx.globalAlpha=e.def.invisible&&!detected(e)?.025:.3; ell(e.x+4,e.y+4,e.r*1.1,e.r*.8,'#000'); ctx.globalAlpha=1;
     upright(e.x,e.y,()=>{
       ctx.save(); ctx.translate(0,-e.r*.35);
       ctx.shadowColor=e.hitGlow>0?'#fff7ca':e.boss?'#ff863c66':'transparent'; ctx.shadowBlur=e.hitGlow>0?12:e.boss?9:0;
@@ -1529,6 +1553,7 @@ html.touch .dexov { z-index: 30; }
   function drawEnemy(e) {
     const d = e.def, r = e.r;
     c = ctx;
+    if(d.invisible&&!detected(e)){ctx.save();ctx.globalAlpha=.075;drawActor(ctx,d,e,e.x,e.y,r,G.t+e.age,e.fx);ctx.restore();return;}
     if (e.fly) { ctx.globalAlpha = 0.25; ell(e.x, e.y + r * 0.6, r * 0.9, r * 0.35, '#000'); ctx.globalAlpha = 1; }
     const lift = e.fly ? r * 0.9 : 0;
     if (e.burrowed) {
@@ -1538,7 +1563,8 @@ html.touch .dexov { z-index: 30; }
       c = ctx; ell(0, 0, 8, 11, '#ffb030'); ell(0, 1, 5, 7, '#ffe27a'); flame(0, -8, 12, 6, '#ff7a1c', '#ffe27a', G.t);
       ctx.restore();
     } else {
-      if (d.stealth) ctx.globalAlpha = 0.45;
+      if(d.invisible&&!e.inTesla)ctx.globalAlpha=.075+.925*Math.min(1,Math.max(0,((e.revealedUntil||0)-performance.now())/500));
+      else if (d.stealth) ctx.globalAlpha = 0.45;
       drawActor(ctx, d, e, e.x, e.y - lift, r, G.t + e.age, e.fx);
       ctx.globalAlpha = 1;
     }
@@ -1766,6 +1792,7 @@ html.touch .dexov { z-index: 30; }
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     ctx.font = '700 14px "Chakra Petch", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     for (const fl of G.floats) { ctx.globalAlpha = Math.min(1, fl.life / 20); ctx.fillStyle = fl.colr || C.gold; upright(fl.x,fl.y,()=>ctx.fillText(fl.text, fl.x, fl.y)); ctx.globalAlpha = 1; }
+    drawNukes();
     ctx.restore();
     // Screen-space bloom keeps impacts soft and circular above the sloping deck.
     ctx.save(); ctx.globalCompositeOperation='screen';
@@ -1793,7 +1820,7 @@ html.touch .dexov { z-index: 30; }
     path = MAP.map(([x, y]) => (p ? [y, x] : [x, y]));
     bgc = null;
     const sw = (o) => { if (!o) return; const t = o.x; o.x = o.y; o.y = t; };
-    G.towers.forEach(sw); sw(G.item); G.floats.forEach(sw); G.rings.forEach(sw); sw(build.ghost);
+    G.towers.forEach(sw); sw(G.item);sw(G.nukeTarget);G.nukes.forEach(sw); G.floats.forEach(sw); G.rings.forEach(sw); sw(build.ghost);
     G.parts.forEach((o) => { sw(o); const v = o.vx; o.vx = o.vy; o.vy = v; });
     G.enemies.forEach((e) => { sw(e); e.trail.forEach(sw); if(e.flightPath)e.flightPath.forEach(p=>{[p[0],p[1]]=[p[1],p[0]];}); });
     const s2 = (b) => { let t = b.x1; b.x1 = b.y1; b.y1 = t; t = b.x2; b.x2 = b.y2; b.y2 = t; };
@@ -1858,7 +1885,8 @@ html.touch .dexov { z-index: 30; }
   function tapField(ev) {
     if (G.over || !G.started) return;
     ev.preventDefault();
-    const p = toLocal(ev), touch = ev.pointerType !== 'mouse', pad = touch ? 14 : 4;
+    const p = toLocal(ev);if(G.nukeAim){launchNuke(p.x,p.y);return;}
+    const touch = ev.pointerType !== 'mouse', pad = touch ? 14 : 4;
     if (G.item && Math.hypot(G.item.x - p.x, G.item.y - p.y) <= (touch ? 40 : 28)) { collectItem(); return; }
     const r=cv.getBoundingClientRect(),q=camera(),sx=(ev.clientX-r.left)*SW/r.width,sy=(ev.clientY-r.top)*SH/r.height;
     const screenHit=(o,lift,rad)=>{const a=project(o.x,o.y);return Math.hypot(a.x-sx,a.y-lift*q.zoom-sy)<=rad*q.zoom+(touch?8:2);};
@@ -1875,7 +1903,7 @@ html.touch .dexov { z-index: 30; }
     }
     G.selected = null; G.inspect = null;
     for (const e of G.enemies) {
-      if (e.burrowed) continue;
+      if (e.burrowed || !detected(e)) continue;
       if (screenHit(e,e.r*(e.fly?1.25:.35),e.r)) { G.inspect = e; markSeen(e.def.id); break; }
     }
   }
@@ -1898,7 +1926,7 @@ html.touch .dexov { z-index: 30; }
         view.focusY=Math.max(0,Math.min(1,drag.fy-(-q.b*sx+q.a*sy)/det/H));
         cv.style.cursor='grabbing';
       }
-    } else if(ev.pointerType==='mouse'&&build.on)build.ghost=snap(toLocal(ev));
+    } else if(ev.pointerType==='mouse'){if(build.on)build.ghost=snap(toLocal(ev));if(G.nukeAim)G.nukeTarget=toLocal(ev);}
   });
   function finishDrag(ev,cancel=false) {
     if(!drag||drag.id!==ev.pointerId)return;
@@ -1911,23 +1939,61 @@ html.touch .dexov { z-index: 30; }
   cv.addEventListener('lostpointercapture',ev=>{if(drag&&drag.id===ev.pointerId){drag=null;cv.style.cursor='grab';}});
 
   function doBuild() {
+    G.nukeAim=false;
     if (G.over || !G.started) return;
     if (build.on) { placeGhost(); return; }
     if (G.gold < buildCost(build.type)) return;
     build.on = true; build.ghost = null; G.selected = null; G.inspect = null;
   }
-  function cancelBuild() { build.on = false; build.ghost = null; }
+  function cancelBuild() { G.nukeAim=false; build.on = false; build.ghost = null; }
   function doUpgrade() {
     const t = G.selected;
     if (t && TMAP[t.type].slows) { const r = repairCost(t); if (r != null && G.gold >= r && !G.over) { G.gold -= r; t.hp = towerMax(t); ring(t.x, t.y, 40, '#5ad7ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'repaired', life: 40, colr: '#5ad7ff' }); } return; }
     const k = t && upgradeCost(t); if (t && k != null && G.gold >= k && !G.over) { G.gold -= k; upgrade(t); } }
-  function doSell() { const t = G.selected; if (!t || G.over) return; G.gold += sellValue(t); G.towers.splice(G.towers.indexOf(t), 1); G.selected = null; }
+  const NUKE_COST=1000,NUKE_RADIUS=HEX_X*6,NUKE_DAMAGE=5000,NUKE_COOLDOWN=15000;
+  function doNuke(){
+    if(!G.started||G.over||G.paused||codexOpen||G.gold<NUKE_COST||performance.now()<G.nukeReadyAt)return;
+    G.nukeAim=!G.nukeAim;build.on=false;build.ghost=null;G.selected=null;G.inspect=null;
+  }
+  function launchNuke(x,y){
+    const now=performance.now();
+    if(!G.nukeAim||G.over||G.paused||G.gold<NUKE_COST||now<G.nukeReadyAt||x<0||x>W||y<0||y>H)return false;
+    G.gold-=NUKE_COST;G.nukeReadyAt=now+NUKE_COOLDOWN;G.nukeAim=false;
+    G.nukes.push({x,y,born:now,hit:false});return true;
+  }
+  function updateNukes(now){
+    for(const n of G.nukes)if(!n.hit&&now-n.born>=650){
+      n.hit=true;
+      for(const e of G.enemies)if(!e.fly&&e.hp>0&&Math.hypot(e.x-n.x,e.y-n.y)<=NUKE_RADIUS)hurt(e,NUKE_DAMAGE,{melt:true,pierceShield:true});
+      ring(n.x,n.y,NUKE_RADIUS,'#ffd58a');G.shake=Math.max(G.shake,9);
+    }
+    G.nukes=G.nukes.filter(n=>now-n.born<4200);
+  }
+  function drawNukes(){
+    const now=performance.now();
+    if(G.nukeAim){const p=G.nukeTarget||{x:W/2,y:H/2};ctx.save();ctx.strokeStyle='#ffca70';ctx.lineWidth=2;ctx.setLineDash([7,5]);ctx.beginPath();ctx.arc(p.x,p.y,NUKE_RADIUS,0,TAU);ctx.stroke();ctx.restore();}
+    for(const n of G.nukes){const age=now-n.born;
+      upright(n.x,n.y,()=>{ctx.save();ctx.translate(n.x,n.y);c=ctx;
+        if(age<650){const y=-220*(1-age/650);ln(0,y-35,0,y-8,2,'#ffcf8a');ell(0,y,5,12,'#536473');poly('#a4aeb5',-5,y-8,-10,y-16,10,y-16,5,y-8);}
+        else {const t=(age-650)/1000,k=Math.min(1,t/.5),fade=Math.min(1,(4.2-age/1000)/1.2);
+          ctx.globalAlpha=Math.max(0,fade);glow(0,-12,NUKE_RADIUS*(.45+k*.6),'#ff9a39',Math.max(0,.7-t*.18));
+          ctx.save();ctx.scale(1,.38);ctx.strokeStyle='#ffda8b';ctx.lineWidth=5*(1-t/4);ctx.beginPath();ctx.arc(0,0,Math.min(NUKE_RADIUS,t*240),0,TAU);ctx.stroke();ctx.restore();
+          const rise=Math.min(110,t*65);
+          for(let i=0;i<7;i++){const y=-rise*i/7;ell(Math.sin(i*2+n.x)*5,y,12+i*2,10+i,'#84624b');}
+          for(let i=0;i<11;i++){const a=i*Math.PI/10;const x=Math.cos(a)*(38+k*36),y=-rise-8-Math.sin(a)*17;
+            ell(x,y,22+k*8,16+k*7,t<.8?'#c78345':'#69594e');ell(x-4,y-5,12+k*5,8+k*3,t<.6?'#ffe2a1':'#a28767');}
+          if(t<.35)glow(0,-18,85,'#fff5cc',1-t/.35);
+        }ctx.restore();c=ctx;
+      });
+    }
+  }
+
   function doNext() { if (G.isBreak && !G.over && G.started && !G.awaitingFirstTower) G.breakT = 0; }
   function togglePause() { if (G.started && !G.over) G.paused = !G.paused; }
   function cycleSpeed() { G.speed = G.speed === 1 ? 2 : 1; } // 1× or 2× only
   $('bBuild').addEventListener('click', doBuild);
   $('bUp').addEventListener('click', doUpgrade);
-  $('bSell').addEventListener('click', doSell);
+  $('bNuke').addEventListener('click', doNuke);
   $('bNext').addEventListener('click', doNext);
   $('bPause').addEventListener('click', togglePause);
   $('bSpeed').addEventListener('click', cycleSpeed);
@@ -1940,7 +2006,7 @@ html.touch .dexov { z-index: 30; }
     if (k === 'c') { openCodex(!codexOpen); return; }
     if (codexOpen) { if (k === 'escape') openCodex(false); return; }
     if (!G.started || G.over) { if (k === 'enter') start(); return; }
-    if (k === 'b') doBuild(); else if (k === 'u') doUpgrade(); else if (k === 's') doSell();
+    if (k === 'b') doBuild(); else if (k === 'u') doUpgrade(); else if (k === 's') doNuke();
     else if (k === 'n') doNext(); else if (k >= '1' && k <= '4') { build.type = TOWERS[+k - 1].id; if (!build.on) doBuild(); } else if (k === 'f') cycleSpeed();
     else if (k === 'escape') { cancelBuild(); G.selected = null; G.inspect = null; }
     else if (k === ' ') { e.preventDefault(); togglePause(); }
@@ -1977,7 +2043,7 @@ html.touch .dexov { z-index: 30; }
     const txt = document.createElement('div'); txt.className = 'dtxt';
     const mk = (cls, s2) => { const n = document.createElement('div'); n.className = cls; n.textContent = s2; txt.appendChild(n); };
     mk('dname', b.name); mk('drole', d.name + (d.tiers.length > 1 ? ' · Tier ' + TIER_NAMES[i] : ' · no upgrades'));
-    mk('dstats', (b.slow ? 'Slow ' + Math.round(b.slow * 100) + '%' : 'DMG ' + b.dmg + (b.dps ? '/s' : '')) + ' · Range ' + b.range.toFixed(1) + ' · ' + b.rate + ' · ' + (i ? 'Upgrade ' + upCost(d.id, i - 1) : 'Cost ' + b.cost) + 'g');
+    mk('dstats', (b.slow ? 'Zap ' + b.dmg + ' · Slow ' + Math.round(b.slow * 100) + '%' : 'DMG ' + b.dmg + (b.dps ? '/s' : '')) + ' · Range ' + b.range.toFixed(1) + ' · ' + b.rate + ' · ' + (i ? 'Upgrade ' + upCost(d.id, i - 1) : 'Cost ' + b.cost) + 'g');
     mk('ddesc', b.look);
     const pk = tierPerk(d, b); if (pk) mk('dplay', pk);
     el.append(cvs, txt);
@@ -2016,7 +2082,7 @@ html.touch .dexov { z-index: 30; }
       for (let i = 0; i < d.tiers.length; i++) grid.appendChild(towerCard(d, i));
       body.append(h, p, grid);
     });
-    [['Standard units', UNITS], ['Bosses', BOSSES]].forEach(([title, list]) => {
+    [['Standard units', UNITS.filter(d=>!d.invisible)], ['Invisible units',INVISIBLE_UNITS], ['Medium bosses',MEDIUM_BOSSES], ['Bosses', BOSSES]].forEach(([title, list]) => {
       const h = document.createElement('h3'), grid = document.createElement('div');
       h.textContent = title + ' · ' + list.filter((d) => seen.has(d.id)).length + ' of ' + list.length + ' met';
       grid.className = 'dexgrid';
@@ -2050,18 +2116,22 @@ html.touch .dexov { z-index: 30; }
     $('bUp').disabled = !t || uc == null || G.gold < uc || G.over;
     $('bUp').firstElementChild.textContent = tes ? 'Repair' : t && t.tier === 3 ? 'Master' : 'Upgrade';
     $('sUp').textContent = !t ? 'select tower' : uc == null ? (tes ? 'full health' : 'maxed') : '$' + uc;
-    $('bSell').disabled = !t || G.over; $('sSell').textContent = t ? '+$' + sellValue(t) : 'select tower';
+    const cooldown=Math.max(0,G.nukeReadyAt-performance.now());
+    $('bNuke').disabled=!G.started||G.over||G.paused||G.gold<NUKE_COST||cooldown>0;
+    $('bNuke').classList.toggle('on',G.nukeAim);
+    $('sNuke').textContent=cooldown>0?Math.ceil(cooldown/1000)+'s cooldown':G.nukeAim?'Tap field · $1,000':'$1,000 · Nuke';
     $('bNext').disabled = !G.isBreak || G.over || !G.started || G.awaitingFirstTower; $('sNext').textContent = G.awaitingFirstTower ? 'place tower' : G.isBreak ? 'now' : 'running';
     $('bCancel').hidden = !build.on;
     $('picker').hidden = !build.on;
     $('picker').querySelectorAll('button').forEach((bt) => bt.classList.toggle('on', bt.dataset.t === build.type));
     let info;
     const ie = G.inspect;
-    if (build.on) info = '<b>' + TMAP[build.type].name + '.</b> ' + TMAP[build.type].play + (build.ghost ? ' Tap it again or press Place.' : ' Tap the map to aim.');
+    if(G.nukeAim)info='<b>Nuclear strike.</b> Tap the field: 5,000 damage within roughly 6 hexes. Ground only. Invisible enemies require Tesla detection or its 3-second reveal grace period. $1,000 · 15s real-time cooldown.';
+    else if (build.on) info = '<b>' + TMAP[build.type].name + '.</b> ' + TMAP[build.type].play + (build.ghost ? ' Tap it again or press Place.' : ' Tap the map to aim.');
     else if (t) {
       const st = tstat(t), b = st.b;
       info = '<b>' + b.name + '</b>' + (st.d.slows ? '' : ' · tier ' + TIER_NAMES[t.tier - 1] + (t.mastery ? ' +' + t.mastery : '')) + ' · ' +
-        (b.slow ? 'slows enemies ' + Math.round(b.slow * 100) + '%' : 'dmg ' + Math.round(st.dmg) + (b.dps ? '/s' : '') + ' · ' + b.rate) +
+        (b.slow ? 'zap ' + Math.round(st.dmg) + ' · slows ' + Math.round(b.slow * 100) + '%' : 'dmg ' + Math.round(st.dmg) + (b.dps ? '/s' : '') + ' · ' + b.rate) +
         ' · range ' + (st.range / TILE).toFixed(1) + ' · HP ' + Math.ceil(t.hp) + '/' + towerMax(t);
     }
     else if (ie) info = '<b>' + ie.def.name + '</b> · Level '+ie.level+' · '+ie.def.role+' · HP '+Math.ceil(ie.hp)+'/'+ie.maxHp+' · Attack '+ie.attack + (ie.def.play ? ' · ' + ie.def.play : '');
@@ -2071,13 +2141,13 @@ html.touch .dexov { z-index: 30; }
   }
   const overlay = $('overlay'), card = $('card');
   function showIntro() {
-    card.innerHTML = '<h1>Switchback Defense</h1><p>Hold the line against 80 enemy types and 10 bosses. Build on hex cells. Place your first tower to start the wave countdown. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' +
-      '<ul><li>Pick from three fire towers, each with three tiers, plus a Tesla coil that slows every enemy in range. Every upgrade costs more than the last, and a maxed tower can be mastered. The coil cannot be upgraded; repair it with gold instead. Selling returns half.</li>' +
+    card.innerHTML = '<h1>Switchback Defense</h1><p>Hold the line against 85 enemy types, medium escort bosses, and 10 major bosses. Build on hex cells. Place your first tower to start the wave countdown. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' +
+      '<ul><li>Pick from three fire towers, each with three tiers, plus a Tesla coil that zaps, slows and reveals every enemy in range. Every upgrade costs more than the last, and a maxed tower can be mastered. The coil cannot be upgraded; repair it with gold instead. Special Attack costs $1,000 and launches a ground-only nuclear strike, with a 15-second real-time cooldown.</li>' +
       '<li>Every tower has health and every enemy can attack it, each pausing two to five seconds between strikes. Towers cannot be repaired, but any upgrade restores full health.</li>' +
       '<li>Waves overlap after 20 game seconds if enemies remain. Clearing the field early starts a three-second break.</li>' +
       '<li>One flier in each flying wave carries cargo. Destroy the last flier and the crate drops: tap it within three seconds for a bonus of 15% of your cash.</li>' +
       '<li>New units unlock as you survive. Open the Codex to read about each one.</li>' +
-      '<li>Keys: B build, U upgrade, S sell, N send wave, F speed, 1–4 pick tower, C codex, Space pause.</li></ul>' +
+      '<li>Keys: B build, U upgrade, S special attack, N send wave, F speed, 1–4 pick tower, C codex, Space pause.</li></ul>' +
       '<button class="go" id="goBtn">Start</button><button class="go alt" id="dexBtn">Open Codex</button>';
     overlay.hidden = false;
     $('goBtn').addEventListener('click', start); $('dexBtn').addEventListener('click', () => openCodex(true));
@@ -2096,9 +2166,10 @@ html.touch .dexov { z-index: 30; }
   /* ---------- Loop ---------- */
   const GAME_PACE = 0.75; // the whole simulation runs at 75% of its original pace
   let last = performance.now(), acc = 0;
-  if(location.hash==='#qa') window.__gameQA={G,build,view,WAVE_OVERLAP_TICKS,flierGone,makeFlightPath,routeLen,get rivers(){return RIVERS},get waterCells(){return WATERSET},exteriorObjects,drawExterior,hexCenter,landHex,landCell,hexNeighbors,validHex,snap,placeGhost,tick,doNext,planWave,spawn,attack,special,UNITS,BOSSES,drawActor,drawTowerArt,SECTORS,setSector:i=>{setSector(i);path=MAP.map(([x,y])=>portrait?[y,x]:[x,y]);bgc=null;},get map(){return MAP},get pathCells(){return PATHSET},unproject,canPlace,project,toLocal,camera,makeTower,makeEnemy,startWave,start,layout,draw,get size(){return {W,H}}};
+  if(location.hash==='#qa') window.__gameQA={G,build,view,detected,hurt,burn,fireTower,doNuke,launchNuke,updateNukes,drawNukes,NUKE_COST,NUKE_RADIUS,NUKE_DAMAGE,NUKE_COOLDOWN,INVISIBLE_UNITS,MEDIUM_BOSSES,WAVE_OVERLAP_TICKS,flierGone,makeFlightPath,routeLen,get rivers(){return RIVERS},get waterCells(){return WATERSET},exteriorObjects,drawExterior,hexCenter,landHex,landCell,hexNeighbors,validHex,snap,placeGhost,tick,doNext,planWave,spawn,attack,special,UNITS,BOSSES,drawActor,drawTowerArt,SECTORS,setSector:i=>{setSector(i);path=MAP.map(([x,y])=>portrait?[y,x]:[x,y]);bgc=null;},get map(){return MAP},get pathCells(){return PATHSET},unproject,canPlace,project,toLocal,camera,makeTower,makeEnemy,startWave,start,layout,draw,get size(){return {W,H}}};
   function frame(now) {
     const dt = Math.min(100, now - last); last = now;
+    if(G.started&&!G.over)updateNukes(performance.now());
     if (G.item && G.started && !G.paused && !G.over && !codexOpen && (G.item.left -= dt) <= 0) G.item = null; // real time, ignores game speed
     if (G.started && !G.paused && !G.over && !codexOpen && !rotateBlocked()) {
       acc += dt * G.speed * GAME_PACE;
