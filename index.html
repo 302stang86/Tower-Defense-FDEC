@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#080f1c">
 <title>Switchback Defense</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Chakra+Petch:wght@500;600;700&display=swap">
+<script>if (matchMedia("(pointer: coarse)").matches) document.documentElement.classList.add("touch");</script>
 <style>
 /* Layout concept: HUD strip on top, scaled playfield in the middle, thumb-sized controls below
    (portrait phone), or controls in a right-hand column (short landscape screens). */
@@ -184,6 +185,48 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   .stats { flex: 1 1 auto; }
   .bar { padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ---- Touch devices: always landscape, full-screen board, HUD on top, command bar along the bottom ---- */
+.rotate { display: none; }
+html.touch .cameraHint { display: none; }
+html.touch, html.touch body { position: fixed; inset: 0; width: 100%; height: 100%; max-height: none; margin: 0; padding: 0; display: block; gap: 0; overflow: hidden; background: #070d19; }
+html.touch .stage { position: fixed; inset: 0; border: 0; border-radius: 0; box-shadow: none; background: #070d19; }
+html.touch #field { left: 0; top: 0; transform: none; border-radius: 0; }
+html.touch .hud { position: fixed; top: 0; left: 0; right: 0; z-index: 4; flex-wrap: nowrap; align-items: center; gap: 10px; pointer-events: none;
+  padding: max(6px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 22px max(12px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(rgba(4, 9, 20, 0.85), rgba(4, 9, 20, 0)); }
+html.touch .tools, html.touch .tool { pointer-events: auto; }
+html.touch .brand { display: none; }
+html.touch .stats { flex: 0 0 auto; flex-wrap: nowrap; gap: 14px; }
+html.touch .stat b { font-size: 19px; }
+html.touch .status { flex: 1 1 0; min-width: 0; width: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; text-shadow: 0 1px 3px #000; }
+html.touch .tool { min-height: 38px; min-width: 44px; padding: 0 10px; font-size: 13px; }
+html.touch .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; flex-direction: row; align-items: center; justify-content: center; gap: 8px; pointer-events: none;
+  padding: 26px max(12px, env(safe-area-inset-right, 0px)) max(6px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(rgba(4, 9, 20, 0), rgba(4, 9, 20, 0.88) 42%); }
+html.touch .bar > * { pointer-events: auto; }
+html.touch .info { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(100% - 22px); min-height: 0; max-width: 62%; pointer-events: none;
+  padding: 4px 10px; border-radius: 10px; background: rgba(5, 10, 22, 0.62); font-size: 12px; line-height: 1.25; color: #c4d2dd; }
+html.touch .info .txt { display: block; -webkit-line-clamp: unset; overflow: visible; }
+html.touch .info .link { pointer-events: auto; padding: 0 0 0 10px; min-height: 0; min-width: 0; font-size: 12px; }
+html.touch .picker { flex: 0 1 auto; grid-template-columns: repeat(4, minmax(46px, 64px)); gap: 5px; }
+html.touch .pk { min-height: 46px; font-size: 12px; }
+html.touch .btns { flex: 0 1 auto; grid-template-columns: repeat(4, minmax(58px, 84px)); gap: 6px; }
+html.touch .act { min-height: 50px; padding: 3px 2px; }
+html.touch .act .l { font-size: 13px; }
+html.touch .act .s { font-size: 11px; }
+html.touch .overlay { z-index: 8; }
+html.touch .dexov { z-index: 30; }
+.rotate svg .rot { transform-origin: 32px 26px; animation: tilt 2.4s ease-in-out infinite; }
+@keyframes tilt { 0%, 15% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+@media (orientation: portrait) {
+  html.touch .rotate { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 32px; text-align: center;
+    background: radial-gradient(ellipse at 50% 30%, #1d3050, #070d19 70%); }
+  .rotate h2 { margin: 0; font-family: var(--display); font-size: 24px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rotate p { margin: 0; max-width: 300px; color: var(--muted); line-height: 1.45; }
+  .rotate .tip { font-size: 13px; color: #7f95a8; }
+}
+@media (prefers-reduced-motion: reduce) { .rotate svg .rot { animation: none; } }
 </style>
 </head>
 <body>
@@ -196,6 +239,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   </div>
   <div class="status" id="vStatus"></div>
   <div class="tools">
+    <button class="tool" id="bFull" aria-label="Full screen" hidden>Full</button>
     <button class="tool" id="bDex">Codex</button>
     <button class="tool" id="bSpeed" aria-label="Game speed">1×</button>
     <button class="tool" id="bPause">Pause</button>
@@ -218,6 +262,13 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     <button class="act" id="bNext"><span class="l">Send wave</span><span class="s" id="sNext">now</span></button>
   </div>
 </footer>
+
+<div class="rotate" id="rotate" role="alert">
+  <svg width="86" height="86" viewBox="0 0 64 64" aria-hidden="true"><g class="rot" fill="none" stroke="#87e7ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="8" width="20" height="36" rx="4"/><path d="M30 38h4"/></g><path d="M14 52a22 22 0 0 0 36 0M50 52l-1-7M50 52l-7 1" fill="none" stroke="#ffb13d" stroke-width="3" stroke-linecap="round"/></svg>
+  <h2>Rotate your phone</h2>
+  <p>Switchback Defense plays in landscape. The game is paused until you turn your device sideways.</p>
+  <p class="tip">For true full screen on iPhone: Share &rarr; Add to Home Screen, then open it from your home screen.</p>
+</div>
 
 <div class="dexov" id="dexOv" hidden>
   <div class="dexhead"><h2>Codex</h2><button class="tool" id="dexClose">Close</button></div>
@@ -877,6 +928,8 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
 
   /* ---------- State ---------- */
   let portrait = false, W = MAP_COLS*CELL, H = MAP_ROWS*CELL, scale = 1, dpr = 1;
+  let SW = W, SH = H; // logical screen size: equals the field on desktop, widescreen on phones
+  const IS_TOUCH = document.documentElement.classList.contains('touch');
   let path = MAP.map((p) => p.slice()), lastSec = -1;
   function pickSector() {
     let i; do { i = Math.floor(Math.random() * SECTORS.length); } while (i === lastSec && SECTORS.length > 1);
@@ -1317,10 +1370,10 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const minY=Math.min(...corners.map(p=>p.y)),maxY=Math.max(...corners.map(p=>p.y));
     const zoom=Math.min((W-42)/(maxX-minX),(H-84)/(maxY-minY));
     const z=zoom*GAMEPLAY_ZOOM,mx=HEX_X*2,my=HEX_Y*2;
-    const hx=W/(2*z),hy=(H/2+6)/(.8*z);
-    const fx=Math.max(hx-mx,Math.min(W+mx-hx,view.focusX*W));
-    const fy=Math.max(hy-my,Math.min(H+my-hy,view.focusY*H));
-    return {a,b,c,d,fx,fy,zoom:z,x:W/2-(a*fx+c*fy)*z,y:H/2-(b*fx+d*fy)*z-6};
+    const hx=SW/(2*z),hy=(SH/2+6)/(.8*z);
+    const axis=(half,size,m,focus)=>{const lo=half-m,hi=size+m-half;return lo>hi?size/2:Math.max(lo,Math.min(hi,focus*size));};
+    const fx=axis(hx,W,mx,view.focusX),fy=axis(hy,H,my,view.focusY);
+    return {a,b,c,d,fx,fy,zoom:z,x:SW/2-(a*fx+c*fy)*z,y:SH/2-(b*fx+d*fy)*z-6};
   }
   function project(x,y) { const q=camera(); return {x:q.x+(q.a*x+q.c*y)*q.zoom,y:q.y+(q.b*x+q.d*y)*q.zoom}; }
   function upright(x,y,paint) {
@@ -1358,7 +1411,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     return {x:(q.d*x-q.c*y)/det,y:(-q.b*x+q.a*y)/det};
   }
   function drawLandscape(q) {
-    const pts=[[0,0],[W,0],[W,H],[0,H]].map(([x,y])=>{const p=unproject(x,y,q);return portrait?{x:p.y,y:p.x}:p;});
+    const pts=[[0,0],[SW,0],[SW,SH],[0,SH]].map(([x,y])=>{const p=unproject(x,y,q);return portrait?{x:p.y,y:p.x}:p;});
     const minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x));
     const minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));
     for(let row=Math.floor((minY-HEX_TOP)/HEX_Y)-2;row<=Math.ceil((maxY-HEX_TOP)/HEX_Y)+2;row++)for(let col=Math.floor(minX/HEX_X)-2;col<=Math.ceil(maxX/HEX_X)+2;col++){
@@ -1369,19 +1422,21 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   // Stable exterior dressing follows the active sector and the screen-side borders.
   let exteriorCache=null;
   function exteriorObjects(){
-    const key=W+':'+H+':'+SECTORS.indexOf(SECTOR);
+    const q0=camera(),extX=Math.max(0,(SW/q0.zoom-W)/2)+HEX_X*3,extY=Math.max(0,(SH/(q0.zoom*.8)-H)/2)+HEX_Y*3;
+    const key=W+':'+H+':'+SECTORS.indexOf(SECTOR)+':'+Math.round(extX)+':'+Math.round(extY);
     if(exteriorCache&&exteriorCache.key===key)return exteriorCache.items;
     const hash=(x,y)=>{const n=Math.sin(x*127.1+y*311.7+SECTORS.indexOf(SECTOR)*81.9)*43758.5453;return n-Math.floor(n);};
     const items=[];
-    for(let row=-6;row<=Math.ceil(H/84)+6;row++)for(let col=-6;col<=Math.ceil(W/84)+6;col++){
+    const nx=Math.ceil(extX/84)+2,ny=Math.ceil(extY/84)+2;
+    for(let row=-ny;row<=Math.ceil(H/84)+ny;row++)for(let col=-nx;col<=Math.ceil(W/84)+nx;col++){
       const x=col*84+42,y=row*84+42;
       if(x>-30&&x<W+30&&y>-20&&y<H+35)continue;
-      if(x < -HEX_X*2 || x>W+HEX_X*2 || y < -HEX_Y*2 || y>H+HEX_Y*2)continue;
+      if(x < -extX || x>W+extX || y < -extY || y>H+extY)continue;
       const v=hash(col,row);if(v<.18)continue;
       items.push({x:x+(hash(col+3,row)-.5)*16,y:y+(hash(col,row+4)-.5)*12,
         kind:Math.floor(hash(col+7,row+9)*5),size:.85+hash(col+2,row+1)*.4,v});
     }
-    items.sort((a,b)=>a.y-b.y);exteriorCache={key,items};return items;
+    items.sort((a,b)=>a.y-b.y);exteriorCache={key,items,extX,extY};return items;
   }
   function drawExteriorProp(o){
     const A=SECTOR.acc,S=SECTOR,theme=SECTORS.indexOf(S);
@@ -1436,10 +1491,11 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     ctx.save();
     // Keep every exterior prop, its glow and its shadow outside the playable rectangle.
     // This also guarantees that foreground props never overlap the bottom edge.
-    ctx.beginPath();ctx.rect(-HEX_X*2,-HEX_Y*2,W+HEX_X*4,H+HEX_Y*4);ctx.rect(0,0,W,H);ctx.clip('evenodd');
-    for(const o of exteriorObjects()){
+    const items=exteriorObjects(),ex=exteriorCache.extX,ey=exteriorCache.extY;
+    ctx.beginPath();ctx.rect(-ex,-ey,W+ex*2,H+ey*2);ctx.rect(0,0,W,H);ctx.clip('evenodd');
+    for(const o of items){
       const p=project(o.x,o.y),margin=105*q.zoom;
-      if(p.x < -margin||p.x>W+margin||p.y < -margin||p.y>H+margin)continue;
+      if(p.x < -margin||p.x>SW+margin||p.y < -margin||p.y>SH+margin)continue;
       upright(o.x,o.y,()=>drawExteriorProp(o));
     }
     ctx.restore();c=ctx;
@@ -1517,6 +1573,8 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   }
   /* ---------- Scenery (sci-fi base) and blocking objects ---------- */
   let bgc = null;
+  const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; };
+  const GLOW_M = 320; // how far the soft edge glow reaches outside the playable rectangle
   function makeBg() {
     const k = 2, cvs = document.createElement('canvas');
     cvs.width = W * k; cvs.height = H * k;
@@ -1538,8 +1596,19 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.4, W / 2, H / 2, Math.max(W, H) * 0.78);
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.08)');
     g.fillStyle = vg; g.fillRect(0, 0, W, H);
+    // Feathered inner rim: the playable ground eases down to the border tone instead of stopping at a hard line.
+    const F = 100, rim = (x0, y0, x1, y1, rx, ry, rw, rh) => {
+      const gr = g.createLinearGradient(x0, y0, x1, y1);
+      gr.addColorStop(0, hexA(S.lite, 0.9)); gr.addColorStop(0.3, hexA(S.lite, 0.5)); gr.addColorStop(0.65, hexA(S.lite, 0.16)); gr.addColorStop(1, hexA(S.lite, 0));
+      g.fillStyle = gr; g.fillRect(rx, ry, rw, rh);
+    };
+    rim(0, 0, F, 0, 0, 0, F, H); rim(W, 0, W - F, 0, W - F, 0, F, H); rim(0, 0, 0, F, 0, 0, W, F); rim(0, H, 0, H - F, 0, H - F, W, F);
+    // Soft outer glow, baked once: the border tone fades gradually into the dark surroundings.
+    const gl = document.createElement('canvas'); gl.width = W + GLOW_M * 2; gl.height = H + GLOW_M * 2;
+    const gg = gl.getContext('2d');
+    for (const [blur, a] of [[260, 0.95], [150, 0.9], [70, 0.8]]) { gg.save(); gg.shadowColor = hexA(S.lite, a); gg.shadowBlur = blur; gg.fillStyle = S.lite; gg.fillRect(GLOW_M, GLOW_M, W, H); gg.restore(); }
     c = prev;
-    return { cv: cvs, p: portrait, s: SECTOR };
+    return { cv: cvs, glow: gl, p: portrait, s: SECTOR };
   }
   function drawObj(o) {
     const {x,y}=hexCenter(o.c,o.r),v=o.v,A=SECTOR.acc;
@@ -1588,20 +1657,21 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     c = ctx;
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
     if (G.shake > 0) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
-    const sky=ctx.createLinearGradient(0,0,W,H); sky.addColorStop(0,'#1f344d'); sky.addColorStop(.55,'#101c30'); sky.addColorStop(1,'#090f1c');
-    ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+    const sky=ctx.createLinearGradient(0,0,SW,SH); sky.addColorStop(0,'#1f344d'); sky.addColorStop(.55,'#101c30'); sky.addColorStop(1,'#090f1c');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,SW,SH);
     // Restrained atmospheric motes behind the floating diorama.
     for(let i=0;i<30;i++) {
-      const x=(i*137.27+G.t*(.025+i%3*.012))%W, y=(i*79.13-G.t*.045+H*100)%H;
+      const x=(i*137.27+G.t*(.025+i%3*.012))%SW, y=(i*79.13-G.t*.045+SH*100)%SH;
       ctx.globalAlpha=.12+.16*Math.sin(G.t*.015+i)**2; ctx.fillStyle=i%5?'#88c4de':'#ffb77a';
       ctx.beginPath(); ctx.arc(x,y,i%4===0?1.6:.7,0,TAU); ctx.fill();
     }
     ctx.globalAlpha=1;
     ctx.save();
     const cam=camera(); ctx.transform(cam.a*cam.zoom,cam.b*cam.zoom,cam.c*cam.zoom,cam.d*cam.zoom,cam.x,cam.y);
-    drawLandscape(cam);
-    drawExterior(cam);
     if (!bgc || bgc.p !== portrait || bgc.s !== SECTOR) bgc = makeBg();
+    drawLandscape(cam);
+    ctx.drawImage(bgc.glow, -GLOW_M, -GLOW_M);
+    drawExterior(cam);
     ctx.drawImage(bgc.cv, 0, 0, W, H);
     drawWaterRipples();
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -1706,13 +1776,13 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
       ctx.globalAlpha=k*.32; ctx.fillStyle=glow; ctx.fillRect(p.x-radius,p.y-radius,radius*2,radius*2);
     }
     ctx.restore();
-    if (G.flash > 0) { ctx.fillStyle = 'rgba(255,120,30,' + (G.flash / 22 * 0.35) + ')'; ctx.fillRect(0, 0, W, H); }
+    if (G.flash > 0) { ctx.fillStyle = 'rgba(255,120,30,' + (G.flash / 22 * 0.35) + ')'; ctx.fillRect(0, 0, SW, SH); }
     if (G.banner) {
-      const b = G.banner, bw = Math.min(W - 20, 380);
+      const b = G.banner, bw = Math.min(SW - 20, 380), bt = IS_TOUCH ? 52 : 0;
       ctx.globalAlpha = Math.min(1, b.life / 30);
-      ctx.fillStyle = 'rgba(10,13,16,0.85)'; ctx.fillRect(W / 2 - bw / 2, 10, bw, 48);
-      ctx.fillStyle = b.boss ? C.enemy : C.text; ctx.font = '700 16px "Chakra Petch", sans-serif'; ctx.fillText(b.title, W / 2, 25, bw - 16);
-      ctx.fillStyle = '#c9d4de'; ctx.font = '500 12px "Barlow Semi Condensed", sans-serif'; ctx.fillText(b.sub, W / 2, 44, bw - 16);
+      ctx.fillStyle = 'rgba(10,13,16,0.85)'; ctx.fillRect(SW / 2 - bw / 2, 10 + bt, bw, 48);
+      ctx.fillStyle = b.boss ? C.enemy : C.text; ctx.font = '700 16px "Chakra Petch", sans-serif'; ctx.fillText(b.title, SW / 2, 25 + bt, bw - 16);
+      ctx.fillStyle = '#c9d4de'; ctx.font = '500 12px "Barlow Semi Condensed", sans-serif'; ctx.fillText(b.sub, SW / 2, 44 + bt, bw - 16);
       ctx.globalAlpha = 1;
     }
   }
@@ -1732,12 +1802,19 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   function layout() {
     const r = stage.getBoundingClientRect();
     if (r.width < 10 || r.height < 10) return;
-    const wantPortrait = window.innerWidth < window.innerHeight; // follow the device, not the stage, so building (which resizes the stage) never flips the board
+    // Phones always play landscape; other devices follow the window (not the stage, so building never flips the board).
+    const wantPortrait = IS_TOUCH ? false : window.innerWidth < window.innerHeight;
     if (wantPortrait !== portrait) setOrientation(wantPortrait);
-    scale = Math.min((r.width - 2) / W, (r.height - 2) / H);
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cv.style.width = Math.floor(W * scale) + 'px'; cv.style.height = Math.floor(H * scale) + 'px';
-    cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+    if (IS_TOUCH) { // the board fills the whole screen
+      SH = 800; SW = SH * r.width / r.height; scale = r.height / SH;
+      cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    } else {
+      SW = W; SH = H; scale = Math.min((r.width - 2) / W, (r.height - 2) / H);
+      cv.style.width = Math.floor(W * scale) + 'px'; cv.style.height = Math.floor(H * scale) + 'px';
+      cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+    }
   }
   new ResizeObserver(layout).observe(stage);
   window.addEventListener('resize', layout);
@@ -1750,9 +1827,23 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   window.addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 400); });
   if (window.visualViewport) window.visualViewport.addEventListener('resize', layout);
 
+  /* ---------- Full screen + landscape lock (phones) ---------- */
+  const fsEl = document.documentElement, fsReq = fsEl.requestFullscreen || fsEl.webkitRequestFullscreen;
+  const inFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function lockLandscape() { try { const o = screen.orientation; if (o && o.lock) o.lock('landscape').catch(() => {}); } catch (e) {} }
+  function goFull() {
+    if (!IS_TOUCH) return;
+    if (fsReq && !inFull()) { try { const p = fsReq.call(fsEl, { navigationUI: 'hide' }); Promise.resolve(p).then(lockLandscape).catch(() => {}); } catch (e) {} }
+    else lockLandscape();
+  }
+  const rotateBlocked = () => IS_TOUCH && window.innerWidth < window.innerHeight;
+  if (IS_TOUCH && fsReq) { $('bFull').hidden = false; $('bFull').addEventListener('click', () => { if (inFull()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } else goFull(); }); }
+  document.addEventListener('click', (e) => { if (e.target && e.target.id === 'goBtn') goFull(); });
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach((n) => document.addEventListener(n, () => { setTimeout(layout, 80); if (inFull()) lockLandscape(); }));
+
   /* ---------- Input ---------- */
   function toLocal(e) {
-    const r=cv.getBoundingClientRect();return unproject((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height);
+    const r=cv.getBoundingClientRect();return unproject((e.clientX-r.left)*SW/r.width,(e.clientY-r.top)*SH/r.height);
   }
 
   function placeGhost() {
@@ -1769,7 +1860,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     ev.preventDefault();
     const p = toLocal(ev), touch = ev.pointerType !== 'mouse', pad = touch ? 14 : 4;
     if (G.item && Math.hypot(G.item.x - p.x, G.item.y - p.y) <= (touch ? 40 : 28)) { collectItem(); return; }
-    const r=cv.getBoundingClientRect(),q=camera(),sx=(ev.clientX-r.left)*W/r.width,sy=(ev.clientY-r.top)*H/r.height;
+    const r=cv.getBoundingClientRect(),q=camera(),sx=(ev.clientX-r.left)*SW/r.width,sy=(ev.clientY-r.top)*SH/r.height;
     const screenHit=(o,lift,rad)=>{const a=project(o.x,o.y);return Math.hypot(a.x-sx,a.y-lift*q.zoom-sy)<=rad*q.zoom+(touch?8:2);};
     let hit = null;
     for (const t of [...G.towers].reverse()) if (screenHit(t,12,TOWER_R)) { hit=t;break; }
@@ -1802,7 +1893,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
       if(Math.hypot(dx,dy)>7)drag.moved=true;
       if(drag.moved) {
         const r=cv.getBoundingClientRect(),q=drag.q,det=q.a*q.d-q.b*q.c;
-        const sx=dx*W/r.width/q.zoom,sy=dy*H/r.height/q.zoom;
+        const sx=dx*SW/r.width/q.zoom,sy=dy*SH/r.height/q.zoom;
         view.focusX=Math.max(0,Math.min(1,drag.fx-(q.d*sx-q.c*sy)/det/W));
         view.focusY=Math.max(0,Math.min(1,drag.fy-(-q.b*sx+q.a*sy)/det/H));
         cv.style.cursor='grabbing';
@@ -2009,7 +2100,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   function frame(now) {
     const dt = Math.min(100, now - last); last = now;
     if (G.item && G.started && !G.paused && !G.over && !codexOpen && (G.item.left -= dt) <= 0) G.item = null; // real time, ignores game speed
-    if (G.started && !G.paused && !G.over && !codexOpen) {
+    if (G.started && !G.paused && !G.over && !codexOpen && !rotateBlocked()) {
       acc += dt * G.speed * GAME_PACE;
       while (acc >= STEP && !G.over) { tick(); acc -= STEP; }
     } else acc = 0;
