@@ -67,7 +67,7 @@ button { font: inherit; color: inherit; }
 .tool { min-width: 52px; min-height: 40px; padding: 0 10px; background: var(--btn); border: 1px solid var(--line); border-radius: 6px; font-family: var(--display); font-weight: 600; font-size: 14px; cursor: pointer; }
 .tool:hover { background: var(--btn-hi); }
 .stage { grid-area: stage; position: relative; flex: 1; min-height: 0; overflow: hidden; }
-#field { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 1px solid var(--line); border-radius: 4px; touch-action: none; display: block; background: var(--ground); }
+#field { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 0; border-radius: 4px; touch-action: none; display: block; background: var(--ground); }
 .bar { grid-area: bar; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; }
 .info { min-height: 40px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .info .txt { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
@@ -138,7 +138,7 @@ body { margin:0; background:radial-gradient(ellipse at 50% 15%,#23334c 0%,#10192
 .go { background:linear-gradient(120deg,#87e7ee,#51acdf); box-shadow:0 0 22px #4aafff22; }
 
 /* ---- Mobile friendliness: no double-tap or pinch zoom, no rubber-banding, dynamic viewport height,
-   notch-safe edges, comfortable touch targets ---- */
+   notch-safe edges, comfortable touch targets, compact two-row HUD on phones ---- */
 html { height: 100%; overscroll-behavior: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 body { height: 100%; height: 100dvh; max-height: 100dvh; overscroll-behavior: none; -webkit-touch-callout: none; touch-action: manipulation; }
 button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -147,30 +147,13 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
 .hud { padding-top: max(8px, env(safe-area-inset-top, 0px)); }
 .bar { padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
 .tool { min-height: 44px; }
-.link { min-height: 44px; min-width: 44px; }
+.link { min-height: 44px; min-width: 44px; flex: none; }
+.info .txt { flex: 1 1 0; min-width: 0; }
 @media (hover: none) and (pointer: coarse) {
   .tool:hover, .act:hover:not(:disabled) { background: inherit; }
   .act { min-height: 62px; }
   .pk { min-height: 48px; }
 }
-@media (max-width: 420px) {
-  body { gap: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
-  .stats { gap: 10px; }
-  .stat b { font-size: 19px; }
-  .tool { min-width: 44px; padding: 0 8px; font-size: 13px; }
-  .tools { gap: 4px; }
-  .card { padding: 16px; }
-  .card h1 { font-size: 24px; }
-  .cameraHint { font-size: 10px; left: 6px; right: 6px; }
-}
-@media (orientation: landscape) and (max-height: 520px) {
-  .hud { padding-top: max(4px, env(safe-area-inset-top, 0px)); }
-  .bar { padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
-}
-
-/* Compact two-row HUD on phones: stats on top, status + buttons below; footer never overflows */
-.info .txt { flex: 1 1 0; min-width: 0; }
-.link { flex: none; }
 @media (max-width: 699px) {
   .stats { flex: 1 1 100%; flex-wrap: nowrap; gap: 14px; }
   .status { flex: 1 1 0; min-width: 0; width: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -178,8 +161,14 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   .hud { gap: 4px 10px; }
 }
 @media (max-width: 420px) {
+  body { gap: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
   .stat small { font-size: 9px; letter-spacing: 0.08em; }
   .stat b { font-size: 18px; }
+  .tool { min-width: 44px; padding: 0 8px; font-size: 13px; }
+  .tools { gap: 4px; }
+  .card { padding: 16px; }
+  .card h1 { font-size: 24px; }
+  .cameraHint { font-size: 10px; left: 6px; right: 6px; }
 }
 @media (max-height: 700px) and (orientation: portrait) {
   .act { min-height: 52px; padding: 4px 2px; }
@@ -191,8 +180,9 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   .cameraHint { display: none; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  .hud { flex-wrap: nowrap; }
+  .hud { flex-wrap: nowrap; padding-top: max(4px, env(safe-area-inset-top, 0px)); }
   .stats { flex: 1 1 auto; }
+  .bar { padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
 }
 </style>
 </head>
@@ -214,7 +204,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
 
 <div class="stage" id="stage">
   <canvas id="field" aria-label="Tower defense playfield. Drag to pan; tap to select or build."></canvas>
-  <div class="cameraHint">Drag to pan · Tap to select · Red edge = playable field</div>
+  <div class="cameraHint">Drag to pan · Tap to select · Brighter terrain = playable area</div>
   <div class="overlay" id="overlay"><div class="card" id="card"></div></div>
 </div>
 
@@ -245,7 +235,17 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     tower: col('--tower'), tower2: col('--tower2'), beam: col('--beam'), enemy: col('--enemy'),
     boss: col('--boss'), gold: col('--gold'), text: col('--text'), life: col('--life')
   };
-  const CELL = 50, MAP_COLS = 20, MAP_ROWS = 10; // 200 tiles: 25% more area than the original 160 tiles
+  const CELL = 50, MAP_COLS = 20, MAP_ROWS = 20; // 400 hex cells: twice the previous vertical playable space
+  // Pointy-top odd-row hex coordinates, fitted into the existing rectangular field.
+  const HEX_X=MAP_COLS*CELL/(MAP_COLS+.5),HEX_R=HEX_X/Math.sqrt(3),HEX_Y=HEX_R*1.5;
+  const HEX_TOP=(MAP_ROWS*CELL-((MAP_ROWS-1)*HEX_Y+HEX_R*2))/2;
+  function landHex(col,row){return {x:HEX_X*(col+.5+(Math.abs(row%2)? .5:0)),y:HEX_TOP+HEX_R+row*HEX_Y};}
+  function hexCenter(col,row){const p=landHex(col,row);return portrait?{x:p.y,y:p.x}:p;}
+  function validHex(col,row){return col>=0&&col<MAP_COLS&&row>=0&&row<MAP_ROWS;}
+  function hexNeighbors(col,row){const shift=Math.abs(row%2);return [[col-1,row],[col+1,row],[col-1+shift,row-1],[col+shift,row-1],[col-1+shift,row+1],[col+shift,row+1]];}
+  function hexPath(g,x,y,r=HEX_R-1,rotated=portrait){
+    g.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;const dx=Math.cos(a)*r,dy=Math.sin(a)*r;const px=x+(rotated?dy:dx),py=y+(rotated?dx:dy);if(i)g.lineTo(px,py);else g.moveTo(px,py);}g.closePath();
+  }
   // Sci-fi base sectors: each has a maze route (corner cells [col,row] in landscape) and a colour scheme.
   // One is picked at random every game. Enemies walk cell centres; towers snap to free cells.
   const SECTORS = [
@@ -258,15 +258,40 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     { name: 'Bio-Dome Core', acc: '#6dff9a', deep: '#0c1511', mid: '#17261d', lite: '#26402f',
       corners: [[0, 8], [13, 8], [13, 6], [3, 6], [3, 4], [10, 4], [10, 2], [1, 2], [1, 0], [15, 0]] }
   ];
-  let SECTOR = SECTORS[0], MAP = [], PATHSET = new Set();
+  let SECTOR = SECTORS[0], MAP = [], PATHSET = new Set(), WATERSET=new Set(), RIVERS=[];
   function setSector(i) {
     SECTOR = SECTORS[i];
-    const cs = SECTOR.corners.map(([col,row]) => [Math.round(col * (MAP_COLS-1) / 15), row]);
-    MAP = cs.map(([c, r]) => [c * CELL + CELL / 2, r * CELL + CELL / 2]);
-    PATHSET = new Set();
-    for (let k = 0; k < cs.length - 1; k++) {
-      const a = cs[k], b = cs[k + 1], dx = Math.sign(b[0] - a[0]), dy = Math.sign(b[1] - a[1]);
-      for (let x = a[0], y = a[1]; ; x += dx, y += dy) { PATHSET.add(x + ',' + y); if (x === b[0] && y === b[1]) break; }
+    const cs = SECTOR.corners.map(([col,row]) => [Math.round(col * (MAP_COLS-1) / 15), Math.round(row*(MAP_ROWS-1)/9)]);
+    // Orthogonal route stretches cross the field and waterways.
+    MAP=cs.map(([col,row])=>[HEX_X*(col+.5),landHex(col,row).y]);
+    PATHSET=new Set();
+    for(let row=0;row<MAP_ROWS;row++)for(let col=0;col<MAP_COLS;col++){
+      const p=landHex(col,row);
+      if(MAP.slice(1).some((b,k)=>distSeg(p.x,p.y,MAP[k],b)<=HEX_X*.48))PATHSET.add(col+','+row);
+    }
+    WATERSET=new Set();RIVERS=[];
+    for(let branch=0;branch<2;branch++){
+      const river=[];
+      for(let col=-1;col<=MAP_COLS;col++){
+        const row=Math.max(2,Math.min(MAP_ROWS-3,Math.round((branch?.7:.28)*MAP_ROWS+Math.sin(col*.48+i*1.2+branch*2)*1.4)));
+        river.push({col,row});if(validHex(col,row))WATERSET.add(col+','+row);
+      }
+      RIVERS.push(river);
+    }
+    // Keep river bends away from route junctions: turns remain on dry ground.
+    for(const river of RIVERS)for(const point of river){
+      const original=point.row;
+      const candidates=Array.from({length:MAP_ROWS-4},(_,k)=>k+2).sort((a,b)=>Math.abs(a-original)-Math.abs(b-original));
+      point.row=candidates.find(row=>{const p=landHex(point.col,row);return MAP.every(corner=>Math.hypot(p.x-corner[0],p.y-corner[1])>HEX_X*1.5);})??original;
+    }
+    WATERSET=new Set();
+    // Reserve water and riverbanks against tower placement.
+    for(let row=0;row<MAP_ROWS;row++)for(let col=0;col<MAP_COLS;col++){
+      const p=landHex(col,row);
+      if(RIVERS.some(river=>river.slice(1).some((v,k)=>{
+        const a=landHex(river[k].col,river[k].row),b=landHex(v.col,v.row);
+        return distSeg(p.x,p.y,[a.x,a.y],[b.x,b.y])<=HEX_X*.95;
+      })))WATERSET.add(col+','+row);
     }
   }
   setSector(0);
@@ -277,7 +302,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   // from = first wave the unit can appear. spd is the codex speed value. play = how it behaves in this game.
   const UNITS = [
     { id: 'ember_sprite', name: 'Ember Sprite', role: 'Fast Scout / Burner', hp: 120, dmg: 15, range: 2.5, spd: 3.2, sw: 'Fast', from: 1, r: 10, gap: 22, fly: 1,
-      desc: 'Low health flying unit that dashes ahead to ignite frontline targets.', play: 'Flies a shortcut across the field.',
+      desc: 'Low health flying unit that dashes ahead to ignite frontline targets.', play: 'Flies a varied route at least 25% longer than the direct entry-to-exit distance.',
       base: 'orb', art: { a: '#ff8a2a', b: '#c43d12', c: '#ffe08a', wings: 1 } },
     { id: 'flame_scout', name: 'Flame Scout', role: 'Ranged Harasser', hp: 150, dmg: 22, range: 4.0, spd: 2.8, sw: 'Fast', from: 4, r: 11,
       desc: 'Fires small heat darts from a distance to bypass heavy armor.',
@@ -322,7 +347,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
       desc: 'Gains attack speed and movement speed the lower its health drops.', play: 'Speeds up as its health drops.',
       base: 'person', art: { a: '#b0301a', b: '#5a150a', c: '#ff5a2a', e: '#ff3030', gears: ['axe'] } },
     { id: 'inferno_drake', name: 'Inferno Drake', role: 'Flying Bomber', hp: 310, dmg: 75, range: 3.0, spd: 2.4, sw: 'Fast', from: 21, r: 15, fly: 1,
-      desc: 'Flies straight over ground-based maze paths to rain down fireballs.', play: 'Flies a shortcut across the field.',
+      desc: 'Flies straight over ground-based maze paths to rain down fireballs.', play: 'Flies a varied route at least 25% longer than the direct entry-to-exit distance.',
       base: 'drake', art: { a: '#c4401a', b: '#6a1c0c', c: '#ffa63a' } },
     { id: 'ash_stalker', name: 'Ash Stalker', role: 'Stealth Infiltrator', hp: 140, dmg: 48, range: 1.0, spd: 2.7, sw: 'Fast', from: 11, r: 11, stealth: 1,
       desc: 'Cloaked in thick smoke, becomes invisible to basic towers until attacking.', play: 'Level 1 towers only see it up close.',
@@ -346,7 +371,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
       desc: 'Radiates solar energy, reducing damage taken by surrounding minions.', play: 'Nearby enemies take 25% less damage.',
       base: 'person', art: { a: '#e0b24a', b: '#8a6420', c: '#fff6c8', m: '#e7e1c8', gears: ['sun', 'helm', 'shield'] } },
     { id: 'hellfire_bat', name: 'Hellfire Bat', role: 'Swarm Flier', hp: 95, dmg: 18, range: 1.0, spd: 3.8, sw: 'Very Fast', from: 3, r: 9, gap: 12, fly: 1,
-      desc: 'Swoops in large flocks to distract anti-air towers.', play: 'Flies a shortcut across the field.',
+      desc: 'Swoops in large flocks to distract anti-air towers.', play: 'Flies a varied route at least 25% longer than the direct entry-to-exit distance.',
       base: 'bat', art: { a: '#7a1f14', b: '#3c0e0a', c: '#ff7a2e' } },
     { id: 'magma_centipede', name: 'Magma Centipede', role: 'Segmented Crawler', hp: 450, dmg: 55, range: 1.5, spd: 1.0, sw: 'Slow', from: 29, r: 11, gap: 50, segs: 1,
       desc: 'Long segment body that absorbs heavy concentrated gunfire.',
@@ -874,8 +899,8 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     pickSector();
     Object.assign(G, {
       enemies: [], towers: [], beams: [], floats: [], rings: [], zaps: [], parts: [], shells: [], shake: 0, selected: null, inspect: null, banner: null, flash: 0, t: 0,
-      gold: 250, lives: 20, wave: 0, queue: [], spawnT: 0, breakT: 180, isBreak: true,
-      over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: null
+      gold: 250, lives: 20, wave: 0, waveTicks: 0, queue: [], spawnT: 0, breakT: 180, isBreak: true, awaitingFirstTower: true,
+      over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: new Set()
     });
     build.on = false; build.ghost = null;
   }
@@ -888,7 +913,21 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   const bossMult = (w) => 0.05 + 0.012 * w;
   // Enemy speed starts at half and creeps up to full by wave 40, then slowly past it
   const speedFactor = (w) => (w <= 40 ? 0.5 + 0.0125 * w : Math.min(1.25, 1 + 0.004 * (w - 40)));
-  const ptsOf = (fly) => (fly ? [path[0], path[path.length - 1]] : path);
+  const ptsOf=(fly,e)=>fly?(e&&e.flightPath?e.flightPath:[path[0],path[path.length-1]]):path;
+  function makeFlightPath(){
+    const start=path[0].slice(),end=path[path.length-1].slice();
+    const direct=Math.hypot(end[0]-start[0],end[1]-start[1]),target=direct*(1.25+Math.random()*.1);
+    const middle=[(start[0]+end[0])/2,(start[1]+end[1])/2],pad=24;
+    const corners=[[pad,pad],[W-pad,pad],[pad,H-pad],[W-pad,H-pad]];
+    const via=p=>Math.hypot(p[0]-start[0],p[1]-start[1])+Math.hypot(end[0]-p[0],end[1]-p[1]);
+    const choices=corners.filter(p=>via(p)>=target);
+    if(!choices.length)return [start,...corners,end]; // Bounded fallback for unusual future maps.
+    const corner=choices[Math.floor(Math.random()*choices.length)];
+    let low=0,high=1;
+    for(let i=0;i<40;i++){const t=(low+high)/2,p=[middle[0]+(corner[0]-middle[0])*t,middle[1]+(corner[1]-middle[1])*t];if(via(p)<target)low=t;else high=t;}
+    const detour=[middle[0]+(corner[0]-middle[0])*high,middle[1]+(corner[1]-middle[1])*high];
+    return [start,detour,end];
+  }
   const routeLen = (p) => { let s = 0; for (let i = 1; i < p.length; i++) s += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return s; };
   // every enemy can hit a tower in an adjacent cell; ranged ones reach further
   const reachOf = (e) => e.def.reach || Math.max(58, e.def.range * TILE + 22);
@@ -900,20 +939,15 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   const repairCost = (t) => { const mx = towerMax(t); return t.hp >= mx ? null : Math.max(10, Math.round(TMAP[t.type].tiers[0].cost * 0.8 * (1 - t.hp / mx) / 5) * 5); };
 
   function makeEnemy(d, w, o = {}) {
-    const pts = ptsOf(!!d.fly);
+    const pts = d.fly ? makeFlightPath() : path;
     const bm = d.boss ? bossMult(w) : hpMult(w);
     const e = {
-      level: Math.max(d.level,w), attack: Math.round(d.dmg*(1+.02*Math.max(0,w-1))),
+      waveNumber:w, level: Math.max(d.level,w), attack: Math.round(d.dmg*(1+.02*Math.max(0,w-1))),
       def: d, x: pts[0][0], y: pts[0][1], idx: 1, travel: 0, age: 0, fx: 1, fly: !!d.fly, boss: !!d.boss, r: d.r,
       total: routeLen(pts), guard: 0, spdMul: 1, atkT: d.boss ? 60 : 60 + Math.floor(Math.random() * 240), spT: d.spCd ? Math.round(d.spCd * 0.6) : 0, healT: 0,
       trail: [], noRew: !!o.summon, armor: d.armor || 0, egg: 0, burrowed: false
     };
-    if (e.fly) {
-      // each flyer picks a random weave: one big S across the route, or a tighter wavy ripple
-      e.bx = e.x; e.by = e.y; e.wPh = Math.random() * TAU; e.wDir = Math.random() < 0.5 ? 1 : -1;
-      if (Math.random() < 0.5) { e.wAmp = 55 + Math.random() * 35; e.wCyc = 1 + (Math.random() < 0.4 ? 0.5 : 0); }
-      else { e.wAmp = 18 + Math.random() * 16; e.wCyc = 4 + Math.floor(Math.random() * 4); }
-    }
+    if(e.fly)e.flightPath=pts;
     // +25% boss, +15% regular health
     e.maxHp = Math.round(d.hp * bm * (d.hpF || 1) * (d.boss ? 1.25 : 1.15)); e.hp = e.maxHp;
     e.speed = d.boss ? SPW[d.sw] * (0.85 + 0.003 * w) : d.spd * 0.9 * speedFactor(w);
@@ -944,22 +978,33 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     t = Math.max(0, Math.min(1, t));
     return Math.hypot(px - (a[0] + t * dx), py - (a[1] + t * dy));
   }
-  // Grid helpers: cells are stored in landscape [col,row]; portrait is the transpose
-  const cellOf = (x, y) => [Math.floor(x / CELL), Math.floor(y / CELL)];
-  const landCell = (x, y) => { const [c, r] = cellOf(x, y); return portrait ? [r, c] : [c, r]; };
-  const snap = (p) => ({ x: (Math.floor(p.x / CELL) + 0.5) * CELL, y: (Math.floor(p.y / CELL) + 0.5) * CELL });
-  const sameCell = (a, b) => Math.floor(a.x / CELL) === Math.floor(b.x / CELL) && Math.floor(a.y / CELL) === Math.floor(b.y / CELL);
+  // Picking, placement and occupancy share the same hex-center geometry.
+  const landCell=(x,y)=>{
+    if(portrait)[x,y]=[y,x];
+    const guess=Math.round((y-HEX_TOP-HEX_R)/HEX_Y);let best=null,bestD=Infinity;
+    for(let row=guess-1;row<=guess+1;row++){
+      const col0=Math.round(x/HEX_X-.5-(Math.abs(row%2)?.5:0));
+      for(let col=col0-1;col<=col0+1;col++){const p=landHex(col,row),d=(p.x-x)**2+(p.y-y)**2;if(d<bestD){bestD=d;best=[col,row];}}
+    }
+    return best;
+  };
+  const snap=p=>{const [col,row]=landCell(p.x,p.y);return hexCenter(col,row);};
+  const sameCell=(a,b)=>{const x=landCell(a.x,a.y),y=landCell(b.x,b.y);return x[0]===y[0]&&x[1]===y[1];};
   function genObjs() {
     const free = [];
-    for (let c = 0; c < MAP_COLS; c++) for (let r = 0; r < MAP_ROWS; r++) if (!PATHSET.has(c + ',' + r)) free.push([c, r]);
+    for (let c = 0; c < MAP_COLS; c++) for (let r = 0; r < MAP_ROWS; r++) if (!PATHSET.has(c + ',' + r)&&!WATERSET.has(c+','+r)) free.push([c, r]);
     const out = [];
-    while (out.length < 5) { const i = Math.floor(Math.random() * free.length), [c, r] = free.splice(i, 1)[0]; out.push({ c, r, k: out.length % 5 === 0 ? Math.floor(Math.random() * 5) : Math.floor(Math.random() * 5), v: Math.random() }); }
+    while (out.length < 38 && free.length) { const i=Math.floor(Math.random()*free.length),[c,r]=free.splice(i,1)[0];
+      const k=out.length%3===0?5:out.length%3===1?6:Math.floor(Math.random()*5);
+      out.push({c,r,k,v:Math.random()});
+    }
+
     return out;
   }
   function canPlace(x, y) {
-    if (x < CELL/2 || x > W-CELL/2 || y < CELL/2 || y > H-CELL/2) return false;
+    if (x < 0 || x > W || y < 0 || y > H) return false;
     const [c, r] = landCell(x, y);
-    if (PATHSET.has(c + ',' + r)) return false;
+    if (!validHex(c,r)||PATHSET.has(c + ',' + r)||WATERSET.has(c+','+r)) return false;
     if (G.objs.some((o) => o.c === c && o.r === r)) return false;
     for (const t of G.towers) if (sameCell(t, { x, y })) return false;
     return true;
@@ -999,25 +1044,30 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     return { q:schedule,label:'Level '+w+' · '+parts.join(' · ') };
 
   }
+  const WAVE_OVERLAP_TICKS=20*60; // 20 game seconds; pauses and speed controls apply.
   function startWave() {
-    G.wave++; G.isBreak = false;
+    if(G.awaitingFirstTower)return;
+    G.wave++; G.isBreak = false; G.waveTicks=0;
     const p = planWave(G.wave);
-    G.queue = p.q; G.spawnT = 0; G.cargo = p.q.some((q) => UMAP[q.id].fly) ? G.wave : null;
+    let due=G.t;
+    for(const item of p.q){due+=item.gap;G.queue.push({...item,waveNumber:G.wave,due});}
+    G.queue.sort((a,b)=>a.due-b.due);
+    if(p.q.some(item=>UMAP[item.id].fly))G.cargo.add(G.wave);
     G.banner = { title: (p.boss ? 'BOSS WAVE ' : 'WAVE ') + G.wave, sub: p.label, boss: !!p.boss, life: 220 };
   }
   function spawn(item) {
     const d = UMAP[item.id];
-    const e = makeEnemy(d, G.wave);
-    if (d.fly) e.wv = G.wave; // tags this wave's flyers for the cargo drop
+    const e = makeEnemy(d, item.waveNumber || G.wave);
+    if (d.fly) e.wv = e.waveNumber; // tags this wave's flyers for the cargo drop
     G.enemies.push(e);
     markSeen(d.id);
   }
   // One flier per flying wave carries cargo. When the last flier of that wave is destroyed it drops,
   // and the player has three real-time seconds to tap it for a cash bonus.
   function flierGone(e, killed) {
-    if (!e.fly || !e.wv || G.cargo !== e.wv) return;
-    if (G.enemies.some((o) => o.fly && o.wv === e.wv && o.hp > 0) || G.queue.some((q) => UMAP[q.id].fly)) return;
-    G.cargo = null;
+    if (!e.fly || !e.wv || !G.cargo.has(e.wv)) return;
+    if (G.enemies.some((o) => o.fly && o.wv === e.wv && o.hp > 0) || G.queue.some((q) => q.waveNumber===e.wv && UMAP[q.id].fly)) return;
+    G.cargo.delete(e.wv);
     if (killed) { G.item = { x: e.x, y: e.y, left: 3000, max: 3000 }; ring(e.x, e.y, 40, '#ffd24d'); G.floats.push({ x: e.x, y: e.y - 24, text: 'CARGO DROP! TAP IT', life: 70, colr: '#ffd24d' }); }
   }
   function collectItem() {
@@ -1077,7 +1127,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const mx = t.x + Math.cos(t.angle) * 16, my = t.y + Math.sin(t.angle) * 16;
     if (t.type === 'mortar') {
       const dd = dist(t, target), dur = Math.round(24 + dd / 9);
-      const pts = ptsOf(target.fly), tg = pts[Math.min(target.idx, pts.length - 1)];
+      const pts = ptsOf(target.fly,target), tg = pts[Math.min(target.idx, pts.length - 1)];
       const hd = Math.hypot(tg[0] - target.x, tg[1] - target.y) || 1, lead = Math.min(hd, target.speed * dur);
       G.shells.push({ x1: t.x, y1: t.y, x2: target.x + (tg[0] - target.x) / hd * lead, y2: target.y + (tg[1] - target.y) / hd * lead, t: 0, dur, tier: t.tier, R: b.splash * TILE, dmg: s.dmg });
       burst(mx, my, 5 + t.tier * 3, ['#ffe27a', '#ff9a3a'], 2.6, 12, 2.4); burst(mx, my, 3, ['#6a625c'], 1, 26, 4, false);
@@ -1107,18 +1157,18 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   function summon(e, id, n) {
     const u = UMAP[id];
     for (let i = 0; i < n && G.enemies.length < 90; i++) {
-      const m = makeEnemy(u, G.wave, { summon: true });
+      const m = makeEnemy(u, e.waveNumber, { summon: true });
       if (!u.fly && !e.fly) { m.x = e.x; m.y = e.y; m.idx = e.idx; m.travel = e.travel; }
       G.enemies.push(m); markSeen(id);
     }
   }
   function special(e) {
     const d = e.def;
-    if (e.boss && G.wave < BOSS_ATK_WAVE && !['summon', 'queen'].includes(d.sp)) return;
+    if (e.boss && e.waveNumber < BOSS_ATK_WAVE && !['summon', 'queen'].includes(d.sp)) return;
     const near = (r) => G.towers.filter((t) => Math.hypot(t.x - e.x, t.y - e.y) <= r);
     switch (d.sp) {
-      case 'summon': summon(e, 'fire_wisp', 5 + Math.floor(G.wave / 15)); ring(e.x, e.y, 60, '#ff9a3a'); break;
-      case 'queen': summon(e, 'ember_sprite', 5 + Math.floor(G.wave / 15)); e.shield = e.shieldMax; ring(e.x, e.y, 50, '#8fd0ff'); break;
+      case 'summon': summon(e, 'fire_wisp', 5 + Math.floor(e.waveNumber / 15)); ring(e.x, e.y, 60, '#ff9a3a'); break;
+      case 'queen': summon(e, 'ember_sprite', 5 + Math.floor(e.waveNumber / 15)); e.shield = e.shieldMax; ring(e.x, e.y, 50, '#8fd0ff'); break;
       case 'firestorm': G.towers.forEach((t) => hitTower(t, e.attack * 0.12)); G.flash = 22; ring(e.x, e.y, 300, '#ff7a2e'); break;
       case 'laser':
         near(reachOf(e)).sort((a, b) => dist(a, e) - dist(b, e)).slice(0, 3).forEach((t) => { hitTower(t, e.attack * 0.3); zap(e, t, '#fff3a0', 4); });
@@ -1136,7 +1186,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const d = e.def;
     if (e.atkT > 0) { e.atkT -= e.boss ? 0.55 : 1; return; } // bosses strike slowly
     if (!d.dmg || e.burrowed || e.egg > 0) return;
-    if (e.boss && G.wave < BOSS_ATK_WAVE) return;
+    if (e.boss && e.waveNumber < BOSS_ATK_WAVE) return;
     const reach = reachOf(e), cand = G.towers.filter((t) => Math.hypot(t.x - e.x, t.y - e.y) <= reach);
     if (!cand.length) return;
     if (d.kamikaze) {
@@ -1160,9 +1210,14 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   function tick() {
     for (const e of G.enemies) if(e.hitGlow>0) e.hitGlow--;
     G.t++;
-    if (G.isBreak) { if (--G.breakT <= 0) startWave(); }
-    else if (G.queue.length) { if (++G.spawnT >= G.queue[0].gap) { G.spawnT = 0; spawn(G.queue.shift()); } }
-    else if (G.enemies.length === 0) { G.isBreak = true; G.breakT = 180; }
+    if(G.isBreak){if(!G.awaitingFirstTower&&--G.breakT<=0)startWave();}
+    else {
+      if(!G.queue.length&&!G.enemies.length){G.isBreak=true;G.breakT=180;}
+      else if(++G.waveTicks>=WAVE_OVERLAP_TICKS)startWave();
+    }
+    // Each wave owns its spawn deadlines; new waves never discard pending enemies.
+    while(G.queue.length&&G.queue[0].due<=G.t)spawn(G.queue.shift());
+
 
     for (const e of G.enemies) { e.guard = 0; e.spdMul = 1; e.teslaSlow = 0; }
     for (const t of G.towers) { // tesla coils slow every enemy in range, flyers included
@@ -1210,30 +1265,23 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
       e.burrowed = !!d.burrow && (e.age % 240) >= 170;
       if (d.sp && e.egg <= 0 && --e.spT <= 0) { e.spT = d.spCd; special(e); }
       attack(e);
-      const pts = ptsOf(e.fly), tg = pts[e.idx];
-      if (e.fly) { e.x = e.bx; e.y = e.by; }
+      const pts = ptsOf(e.fly,e), tg = pts[e.idx];
       const dx = tg[0] - e.x, dy = tg[1] - e.y, dd = Math.hypot(dx, dy);
       let sp = e.speed * e.spdMul * (1 - (e.teslaSlow || 0));
       if (d.rage) sp *= 1 + 0.7 * (1 - Math.max(0, e.hp) / e.maxHp);
       if (e.egg > 0) sp *= 0.3;
       if (dd < sp) { e.x = tg[0]; e.y = tg[1]; e.idx++; e.travel += dd; }
       else { e.x += dx / dd * sp; e.y += dy / dd * sp; e.travel += sp; }
-      if (e.fly) {
-        e.bx = e.x; e.by = e.y;
-        const a = pts[0], b = pts[pts.length - 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-        const f = clamp(Math.hypot(e.x - a[0], e.y - a[1]) / L, 0, 1), env = Math.sin(Math.PI * Math.min(1, f * 1.15)) ** 0.7 * (f > 0.9 ? (1 - f) * 10 : 1);
-        const off = Math.sin(f * TAU * e.wCyc + e.wPh) * e.wAmp * env * e.wDir;
-        e.x += -(b[1] - a[1]) / L * off; e.y += (b[0] - a[0]) / L * off;
-      }
       if (Math.abs(dx) > 0.01) e.fx = dx >= 0 ? 1 : -1;
       if (d.segs) { e.trail.push({ x: e.x, y: e.y }); if (e.trail.length > 900) e.trail.shift(); }
       if (e.idx >= pts.length) { G.lives -= e.cost; if (G.inspect === e) G.inspect = null; G.enemies.splice(i, 1); flierGone(e, false); }
     }
 
-    if (G.cargo) { // the straggler carries the crate
-      let car = null;
-      for (const e of G.enemies) { e.carrier = false; if (e.fly && e.wv === G.cargo && e.hp > 0 && (!car || e.travel < car.travel)) car = e; }
-      if (car) car.carrier = true;
+    // Every overlapping flying wave keeps its own cargo carrier.
+    G.enemies.forEach(e=>{e.carrier=false;});
+    for(const waveNumber of G.cargo){
+      let car=null;for(const e of G.enemies)if(e.fly&&e.wv===waveNumber&&e.hp>0&&(!car||e.travel<car.travel))car=e;
+      if(car)car.carrier=true;
     }
     for (let i = G.towers.length - 1; i >= 0; i--) {
       const t = G.towers[i]; if (t.hp > 0) continue;
@@ -1268,8 +1316,11 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const minX=Math.min(...corners.map(p=>p.x)),maxX=Math.max(...corners.map(p=>p.x));
     const minY=Math.min(...corners.map(p=>p.y)),maxY=Math.max(...corners.map(p=>p.y));
     const zoom=Math.min((W-42)/(maxX-minX),(H-84)/(maxY-minY));
-    const z=zoom*GAMEPLAY_ZOOM,fx=view.focusX*W,fy=view.focusY*H;
-    return {a,b,c,d,zoom:z,x:W/2-(a*fx+c*fy)*z,y:H/2-(b*fx+d*fy)*z-6};
+    const z=zoom*GAMEPLAY_ZOOM,mx=HEX_X*2,my=HEX_Y*2;
+    const hx=W/(2*z),hy=(H/2+6)/(.8*z);
+    const fx=Math.max(hx-mx,Math.min(W+mx-hx,view.focusX*W));
+    const fy=Math.max(hy-my,Math.min(H+my-hy,view.focusY*H));
+    return {a,b,c,d,fx,fy,zoom:z,x:W/2-(a*fx+c*fy)*z,y:H/2-(b*fx+d*fy)*z-6};
   }
   function project(x,y) { const q=camera(); return {x:q.x+(q.a*x+q.c*y)*q.zoom,y:q.y+(q.b*x+q.d*y)*q.zoom}; }
   function upright(x,y,paint) {
@@ -1307,18 +1358,91 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     return {x:(q.d*x-q.c*y)/det,y:(-q.b*x+q.a*y)/det};
   }
   function drawLandscape(q) {
-    // All FOUR screen corners are required to cover a rotated viewport.
-    const pts=[[0,0],[W,0],[W,H],[0,H]].map(([x,y])=>unproject(x,y,q));
-    const x0=Math.floor(Math.min(...pts.map(p=>p.x))/CELL)-1,x1=Math.ceil(Math.max(...pts.map(p=>p.x))/CELL)+1;
-    const y0=Math.floor(Math.min(...pts.map(p=>p.y))/CELL)-1,y1=Math.ceil(Math.max(...pts.map(p=>p.y))/CELL)+1;
-    for(let row=y0;row<y1;row++) for(let col=x0;col<x1;col++) {
-      const x=col*CELL,y=row*CELL;
-      if(x>=0&&x<W&&y>=0&&y<H) continue;
-      const n=Math.abs(Math.sin(col*127.1+row*311.7));
-      ctx.fillStyle=n>.75?'#172c30':'#122329';ctx.fillRect(x,y,CELL,CELL);
-      ctx.strokeStyle='#294046';ctx.lineWidth=.7;ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
-      if(n>.98) {ctx.fillStyle='#35535a';ctx.fillRect(x+18,y+18,12,12);}
+    const pts=[[0,0],[W,0],[W,H],[0,H]].map(([x,y])=>{const p=unproject(x,y,q);return portrait?{x:p.y,y:p.x}:p;});
+    const minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x));
+    const minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));
+    for(let row=Math.floor((minY-HEX_TOP)/HEX_Y)-2;row<=Math.ceil((maxY-HEX_TOP)/HEX_Y)+2;row++)for(let col=Math.floor(minX/HEX_X)-2;col<=Math.ceil(maxX/HEX_X)+2;col++){
+      const p=hexCenter(col,row);const n=Math.abs(Math.sin(col*127.1+row*311.7));
+      hexPath(ctx,p.x,p.y,HEX_R+.7);ctx.fillStyle=SECTOR.deep;ctx.fill();
     }
+  }
+  // Stable exterior dressing follows the active sector and the screen-side borders.
+  let exteriorCache=null;
+  function exteriorObjects(){
+    const key=W+':'+H+':'+SECTORS.indexOf(SECTOR);
+    if(exteriorCache&&exteriorCache.key===key)return exteriorCache.items;
+    const hash=(x,y)=>{const n=Math.sin(x*127.1+y*311.7+SECTORS.indexOf(SECTOR)*81.9)*43758.5453;return n-Math.floor(n);};
+    const items=[];
+    for(let row=-6;row<=Math.ceil(H/84)+6;row++)for(let col=-6;col<=Math.ceil(W/84)+6;col++){
+      const x=col*84+42,y=row*84+42;
+      if(x>-30&&x<W+30&&y>-20&&y<H+35)continue;
+      if(x < -HEX_X*2 || x>W+HEX_X*2 || y < -HEX_Y*2 || y>H+HEX_Y*2)continue;
+      const v=hash(col,row);if(v<.18)continue;
+      items.push({x:x+(hash(col+3,row)-.5)*16,y:y+(hash(col,row+4)-.5)*12,
+        kind:Math.floor(hash(col+7,row+9)*5),size:.85+hash(col+2,row+1)*.4,v});
+    }
+    items.sort((a,b)=>a.y-b.y);exteriorCache={key,items};return items;
+  }
+  function drawExteriorProp(o){
+    const A=SECTOR.acc,S=SECTOR,theme=SECTORS.indexOf(S);
+    ctx.save();ctx.translate(o.x,o.y);ctx.scale(o.size,o.size);c=ctx;
+    ell(8,9,31,10,'#03090e88');
+    const box=(x,y,w,h,color)=>{
+      poly(color,x-w/2,y-h,x+w/2,y-h,x+w/2,y,x-w/2,y);
+      poly(S.lite,x-w/2,y-h,x-w/2+9,y-h-7,x+w/2+9,y-h-7,x+w/2,y-h);
+      poly('#17222d',x+w/2,y-h,x+w/2+9,y-h-7,x+w/2+9,y-7,x+w/2,y);
+      ln(x-w/2,y-h,x+w/2,y-h,1,'#c1d4dd88');
+    };
+    if(theme===3&&(o.kind===0||o.kind===4)){
+      // Bio-dome planters with branching, layered canopy silhouettes.
+      box(0,7,38,13,'#3d5145');ln(0,0,0,-40,7,'#5b4f3f');
+      for(let i=0;i<6;i++){const side=i%2?1:-1,yy=-17-i*7;ln(0,yy,side*(10+i),yy-8,2.3,'#695d43');ell(side*(7+i),yy-9,13-i*.6,9,'#3f7054');}
+      for(let i=0;i<4;i++)circ(-11+i*7,-27-i%2*15,1.2,A);
+    }else if(o.kind===0){
+      // Sector-colored utility building, layered roof and recessed service panels.
+      box(0,5,49,42,theme===2?'#685642':S.lite);box(-2,-38,35,11,'#3c4b5a');
+      for(let i=0;i<4;i++)ln(-18,-30+i*5,5,-30+i*5,2,'#18242e');
+      box(10,5,12,24,'#26343e');circ(12,-8,1.8,A);ln(-23,-37,22,-37,1.4,A);
+      if(theme===1){poly('#bdd7df99',-26,-39,-17,-45,28,-45,24,-38);}
+    }else if(o.kind===1){
+      // Storage tanks with collars and steel piping.
+      for(const x of [-13,12]){
+        ctx.fillStyle=material('#667c8b',x,-22,10,25);ctx.fillRect(x-10,-43,20,45);
+        ell(x,1,10,4,'#344859');ell(x,-43,10,4,'#93a7ae');
+        ln(x-10,-12,x+10,-12,2,'#233443');ln(x-10,-34,x+10,-34,2,'#233443');
+        ln(x,-18,x,-29,3,A);circ(x,-43,2,'#d5dddb');
+      }
+      ln(-13,-48,12,-48,3,'#80929c');ln(-13,-48,-13,-43,3,'#80929c');
+    }else if(o.kind===2){
+      // Cargo stacks, tie-down ribs and tiny illuminated latches.
+      box(-10,7,29,25,theme===2?'#8e6241':'#536473');box(17,8,23,19,'#3b4c5c');box(-7,-19,25,22,S.lite);
+      for(const y of [-34,-7]){ln(-18,y,4,y,1.5,'#223140');circ(-7,y+5,1.5,A);}
+      ln(-20,5,-20,-17,1.5,'#b2a58a');ln(1,5,1,-17,1.5,'#b2a58a');
+    }else if(o.kind===3){
+      // Power mast, insulators and sector-matched glowing terminal.
+      box(0,8,23,12,'#435565');ln(0,0,0,-62,6,'#526673');ln(-1,-2,-1,-59,1,'#adc0c8');
+      for(let i=0;i<4;i++)ell(0,-42-i*4,7,2,'#8f9c9f');
+      ell(0,-61,10,4,'#586d79');glow(0,-64,14,A,.25);circ(0,-64,4,A);
+      ln(-18,-48,18,-48,3,'#778e9d');ln(-18,-48,-18,-41,2,A);ln(18,-48,18,-41,2,A);
+    }else{
+      // Ground conduits and low machinery fill gaps without hiding the playfield.
+      box(0,5,42,17,'#40535e');for(let i=0;i<5;i++)ln(-15+i*6,-9,-15+i*6,0,2,'#172933');
+      ln(-29,10,-29,-9,5,'#637b86');ln(-29,-9,-13,-9,5,'#637b86');
+      circ(17,-4,2,A);glow(17,-4,7,A,.18);
+    }
+    ctx.restore();c=ctx;
+  }
+  function drawExterior(q){
+    ctx.save();
+    // Keep every exterior prop, its glow and its shadow outside the playable rectangle.
+    // This also guarantees that foreground props never overlap the bottom edge.
+    ctx.beginPath();ctx.rect(-HEX_X*2,-HEX_Y*2,W+HEX_X*4,H+HEX_Y*4);ctx.rect(0,0,W,H);ctx.clip('evenodd');
+    for(const o of exteriorObjects()){
+      const p=project(o.x,o.y),margin=105*q.zoom;
+      if(p.x < -margin||p.x>W+margin||p.y < -margin||p.y>H+margin)continue;
+      upright(o.x,o.y,()=>drawExteriorProp(o));
+    }
+    ctx.restore();c=ctx;
   }
   /* ---------- Drawing ---------- */
   function drawTower(t, selected) {
@@ -1370,6 +1494,27 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     if (e.shield > 0) { ctx.fillStyle = '#8fd0ff'; ctx.fillRect(bx, by - 3, bw * (e.shield / e.shieldMax), 2); }
   }
 
+  function riverPoints(river){return river.map(p=>hexCenter(p.col,p.row));}
+  function riverTrace(g,pts){g.beginPath();g.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length-1;i++)g.quadraticCurveTo(pts[i].x,pts[i].y,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y)/2);g.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);}
+  function drawRivers(g){
+    g.save();g.lineCap='round';g.lineJoin='round';
+    for(const river of RIVERS){
+      const pts=riverPoints(river);
+      for(const [width,color] of [[HEX_X*1.3,'#343e35'],[HEX_X*1.13,'#66705a'],[HEX_X*.96,'#172f39'],[HEX_X*.8,'#205566'],[HEX_X*.53,'#28758a']]){
+        riverTrace(g,pts);g.lineWidth=width;g.strokeStyle=color;g.stroke();
+      }
+      riverTrace(g,pts);g.lineWidth=1.5;g.strokeStyle='#9bd9d644';g.stroke();
+    }
+    g.restore();
+  }
+  function drawWaterRipples(){
+    ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
+    for(const river of RIVERS)for(let i=1;i<river.length-1;i++){
+      const a=hexCenter(river[i-1].col,river[i-1].row),p=hexCenter(river[i].col,river[i].row),b=hexCenter(river[i+1].col,river[i+1].row);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.globalAlpha=.18+.08*Math.sin(G.t*.03+i);
+      for(let n=0;n<2;n++){const phase=(G.t*.2+i*7+n*19)%28;ln(-13+phase,-7+n*11,-6+phase,-7+n*11,1,'#c0efec');}ctx.restore();
+    }ctx.restore();c=ctx;
+  }
   /* ---------- Scenery (sci-fi base) and blocking objects ---------- */
   let bgc = null;
   function makeBg() {
@@ -1378,62 +1523,40 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const g = cvs.getContext('2d'), prev = c, S = SECTOR;
     g.scale(k, k); c = g;
     let sd = (portrait ? 4711 : 1337) + SECTORS.indexOf(S) * 97; const rnd = () => { sd = (sd * 1664525 + 1013904223) % 4294967296; return sd / 4294967296; };
-    const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, S.lite); gr.addColorStop(.48, S.mid); gr.addColorStop(1, S.deep);
+    const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, shade(S.lite,1.8)); gr.addColorStop(.48, shade(S.lite,1.55)); gr.addColorStop(1, shade(S.lite,1.35));
     g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    // deck plating: every cell is a panel with bevelled seams, rivets and the odd lighter plate
-    for (let x = 0; x < W; x += CELL) for (let y = 0; y < H; y += CELL) {
-      if (rnd() < 0.25) { g.globalAlpha = 0.5; g.fillStyle = S.lite; g.fillRect(x + 2, y + 2, CELL - 4, CELL - 4); }
-      g.globalAlpha = 0.5; g.strokeStyle = '#000'; g.lineWidth = 1.5; g.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
-      g.globalAlpha = 0.18; g.strokeStyle = '#fff'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 2.5, y + CELL - 2.5); g.lineTo(x + 2.5, y + 2.5); g.lineTo(x + CELL - 2.5, y + 2.5); g.stroke();
-      g.globalAlpha = 0.5; [[6, 6], [CELL - 6, 6], [6, CELL - 6], [CELL - 6, CELL - 6]].forEach(([rx, ry]) => circ(x + rx, y + ry, 1.2, '#06090c'));
-      if (rnd() < 0.18) { // floor vent
-        g.globalAlpha = 0.7; g.fillStyle = '#05080b'; g.fillRect(x + 14, y + 16, 22, 18);
-        g.globalAlpha = 0.5; for (let q = 0; q < 4; q++) ln(x + 15, y + 19 + q * 4, x + 35, y + 19 + q * 4, 1.4, S.lite);
-      }
-    }
-    g.globalAlpha = 1;
-    // Fine etched panel details, with sector-colored inset tile corners.
-    for(let x=0;x<W;x+=CELL) for(let y=0;y<H;y+=CELL) {
-      if(PATHSET.has((portrait?y/CELL:x/CELL)+','+(portrait?x/CELL:y/CELL))) continue;
-      g.globalAlpha=.19; ln(x+7,y+10,x+7,y+19,1.5,S.acc); ln(x+7,y+10,x+17,y+10,1.5,S.acc);
-      g.globalAlpha=.09; ln(x+12,y+39,x+38,y+39,1,'#e5efff');
+    // Continuous textured ground: hex geometry stays logical, without visible tile seams.
+    for(let i=0;i<1500;i++){
+      const x=rnd()*W,y=rnd()*H;
+      g.globalAlpha=.025+rnd()*.04;ell(x,y,2+rnd()*12,1+rnd()*5,rnd()<.5?'#d5ddc4':'#0a1519');
     }
     g.globalAlpha=1;
-    // glowing circuit traces running between panels
-    g.lineJoin = 'round'; g.lineCap = 'round';
-    for (let i = 0; i < 16; i++) {
-      let x = Math.floor(rnd() * (W / CELL + 1)) * CELL, y = Math.floor(rnd() * (H / CELL + 1)) * CELL, horiz = rnd() < 0.5;
-      const pts = [[x, y]];
-      for (let j = 0; j < 4; j++) { const d = (rnd() < 0.5 ? -1 : 1) * CELL * (1 + Math.floor(rnd() * 2)); if (horiz) x += d; else y += d; pts.push([x, y]); horiz = !horiz; }
-      [[4, 0.06], [1.4, 0.4]].forEach(([w, al]) => {
-        g.globalAlpha = al; g.strokeStyle = S.acc; g.lineWidth = w; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
-        for (let j = 1; j < pts.length; j++) g.lineTo(pts[j][0], pts[j][1]); g.stroke();
-      });
-      g.globalAlpha = 0.7; circ(pts[pts.length - 1][0], pts[pts.length - 1][1], 2.2, S.acc);
-    }
-    g.globalAlpha = 1;
-    // hazard-stripe trim along the outer wall
-    const strip = (x, y, w, h) => {
-      g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.globalAlpha = 0.5; g.fillStyle = '#0a0d10'; g.fillRect(x, y, w, h);
-      g.fillStyle = S.acc; g.globalAlpha = 0.35;
-      for (let q = -h; q < w + h; q += 16) { g.beginPath(); g.moveTo(x + q, y + h); g.lineTo(x + q + 8, y + h); g.lineTo(x + q + 8 + h, y); g.lineTo(x + q + h, y); g.closePath(); g.fill(); }
-      g.restore();
-    };
-    strip(0, 0, W, 4); strip(0, H - 4, W, 4); strip(0, 0, 4, H); strip(W - 4, 0, 4, H);
+    g.save();g.beginPath();g.rect(0,0,W,H);g.clip();drawRivers(g);g.restore();
     // status lights and vignette
     for (let i = 0; i < 30; i++) { g.globalAlpha = 0.3 + rnd() * 0.5; circ(rnd() * W, rnd() * H, 1 + rnd(), rnd() < 0.8 ? S.acc : '#ff4d4d'); }
     g.globalAlpha = 1;
     const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.4, W / 2, H / 2, Math.max(W, H) * 0.78);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.08)');
     g.fillStyle = vg; g.fillRect(0, 0, W, H);
     c = prev;
     return { cv: cvs, p: portrait, s: SECTOR };
   }
   function drawObj(o) {
-    const x = ((portrait ? o.r : o.c) + 0.5) * CELL, y = ((portrait ? o.c : o.r) + 0.5) * CELL, v = o.v, A = SECTOR.acc;
+    const {x,y}=hexCenter(o.c,o.r),v=o.v,A=SECTOR.acc;
     c = ctx; ctx.save(); ctx.translate(x, y); ctx.globalAlpha = 1;
     ctx.globalAlpha = 0.4; ell(2, 15, 18, 6, '#000'); ctx.globalAlpha = 1;
-    if (o.k === 0) { // stacked cargo crates
+    if(o.k===5){
+      // Broken stone slabs, with distinct top planes and scattered gravel.
+      poly('#3d4646',-19,8,-17,-3,-7,-13,9,-9,18,4,9,12);
+      poly('#7a8377',-17,-3,-7,-13,5,-10,0,1,-10,4);
+      poly('#5c6660',0,1,5,-10,9,-9,18,4,9,12);
+      ln(-11,-3,-3,-7,.8,'#b2ba9d');for(let i=0;i<4;i++)ell(-20+i*12,12+Math.sin(i*2)*3,3,2,'#667063');
+    }else if(o.k===6){
+      // Vegetated island: layered foliage, trunk and roots above the deck.
+      ell(0,10,21,8,'#324a3b');ln(-3,9,0,-23,5,'#66513d');ln(0,-9,-10,-24,2.5,'#735d42');
+      for(let i=0;i<5;i++){const x=Math.sin(i*2.4)*12,y=-14-i*6;ell(x,y,12-i*.9,8,'#456a48');ell(x-3,y-3,7,4,'#6d8654');}
+      for(let i=0;i<5;i++)ln(-15+i*7,12,-17+i*7,4-Math.sin(i)*3,1.2,'#8c9d63');
+    }else if (o.k === 0) { // stacked cargo crates
       poly('#4b5560', -17, 12, -17, -2, -1, -2, -1, 12); poly('#5d6a77', -17, -2, -13, -6, 3, -6, -1, -2);
       poly('#3f4852', -1, 12, -1, -2, 3, -6, 3, 8); ln(-17, 5, -1, 5, 1.5, '#2a3038'); circ(-9, 5, 2, A);
       poly('#56616d', 2, 12, 2, 2, 16, 2, 16, 12); poly('#6b7886', 2, 2, 5, -1, 17, -1, 16, 2); ln(2, 7, 16, 7, 1.4, '#2a3038');
@@ -1477,30 +1600,16 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     ctx.save();
     const cam=camera(); ctx.transform(cam.a*cam.zoom,cam.b*cam.zoom,cam.c*cam.zoom,cam.d*cam.zoom,cam.x,cam.y);
     drawLandscape(cam);
-    // Deep deck fascia: real vertical extrusion beneath the two visible edges.
-    const drop=22/cam.zoom,det=cam.a*cam.d-cam.b*cam.c,dx=-cam.c/det*drop,dy=cam.a/det*drop;
-    ctx.save(); ctx.shadowColor='#000a'; ctx.shadowBlur=30; ctx.shadowOffsetY=18;
-    ctx.fillStyle='#091323'; ctx.fillRect(0,0,W,H); ctx.restore();
-    c=ctx;
-    poly('#101d30',0,H,W,H,W+dx,H+dy,dx,H+dy);
-    poly('#192c43',W,0,W,H,W+dx,H+dy,W+dx,dy);
-    for(let i=30;i<W;i+=50) ln(i+dx*.2,H+dy*.2,i+dx*.7,H+dy*.7,2,SECTOR.acc+'77');
+    drawExterior(cam);
     if (!bgc || bgc.p !== portrait || bgc.s !== SECTOR) bgc = makeBg();
     ctx.drawImage(bgc.cv, 0, 0, W, H);
-    // Exact playable perimeter: scenery outside this line is never buildable.
-    ctx.save();ctx.strokeStyle='#ff7866';ctx.lineWidth=2/cam.zoom;ctx.strokeRect(0,0,W,H);
-    ctx.strokeStyle=SECTOR.acc+'66';ctx.lineWidth=1/cam.zoom;ctx.strokeRect(5,5,W-10,H-10);ctx.restore();
+    drawWaterRipples();
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     const trace = () => { ctx.beginPath(); ctx.moveTo(path[0][0], path[0][1]); for (let i = 1; i < path.length; i++) ctx.lineTo(path[i][0], path[i][1]); };
     trace(); ctx.strokeStyle = SECTOR.acc; ctx.globalAlpha = 0.5; ctx.lineWidth = TRACK_W + 8; ctx.stroke(); ctx.globalAlpha = 1;
     trace(); ctx.strokeStyle = '#05080b'; ctx.lineWidth = TRACK_W + 3; ctx.stroke();
     trace(); ctx.strokeStyle = SECTOR.deep; ctx.lineWidth = TRACK_W - 3; ctx.stroke();
     trace(); ctx.strokeStyle = SECTOR.acc; ctx.globalAlpha = 0.28; ctx.lineWidth = 2; ctx.setLineDash([10, 14]); ctx.lineDashOffset = -G.t * 0.6; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
-    ctx.strokeStyle = 'rgba(190,225,255,0.07)'; ctx.lineWidth = 1; ctx.beginPath();
-    for (let x = 0; x <= W; x += CELL) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
-    for (let y = 0; y <= H; y += CELL) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
-    ctx.stroke();
-
     ctx.font = '600 11px "Chakra Petch", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = C.tower2; ctx.fillText('IN', path[0][0] + 12, path[0][1]);
     ctx.fillStyle = C.life; ctx.fillText('OUT', path[path.length - 1][0] - 14, path[path.length - 1][1]);
@@ -1516,16 +1625,13 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
       ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1; ctx.stroke();
     }
     // Painter order is based on projected ground depth, across all solid entities.
-    const scene=G.objs.map(o=>({depth:(camera().b*((portrait?o.r:o.c)+.5)+camera().d*((portrait?o.c:o.r)+.5))*CELL,paint:()=>{
-      const x=((portrait?o.r:o.c)+.5)*CELL,y=((portrait?o.c:o.r)+.5)*CELL;
-      upright(x,y,()=>drawObj(o));
-    }}));
+    const scene=G.objs.map(o=>{const {x,y}=hexCenter(o.c,o.r),q=camera();return {depth:q.b*x+q.d*y,paint:()=>upright(x,y,()=>drawObj(o))};});
     G.towers.forEach(t=>scene.push({depth:camera().b*t.x+camera().d*t.y,paint:()=>isoTower(t,t===sel)}));
     G.enemies.filter(e=>!e.fly).forEach(e=>scene.push({depth:camera().b*e.x+camera().d*e.y,paint:()=>isoEnemy(e)}));
     scene.sort((a,b)=>a.depth-b.depth); scene.forEach(o=>o.paint());
     if (build.on && build.ghost) {
       const g = build.ghost, ok = canPlace(g.x, g.y) && G.gold >= buildCost(build.type), rg = TMAP[build.type].tiers[0].range * TILE;
-      ctx.fillStyle = ok ? 'rgba(74,168,255,0.22)' : 'rgba(255,107,107,0.22)'; ctx.fillRect(g.x - CELL / 2, g.y - CELL / 2, CELL, CELL);
+      ctx.fillStyle = ok ? 'rgba(74,168,255,0.3)' : 'rgba(255,107,107,0.3)'; hexPath(ctx,g.x,g.y);ctx.fill();ctx.strokeStyle=ok?C.tower:C.life;ctx.lineWidth=1.5;ctx.stroke();
       ctx.beginPath(); ctx.arc(g.x, g.y, rg, 0, TAU); ctx.fillStyle = ok ? 'rgba(74,168,255,0.08)' : 'rgba(255,107,107,0.08)'; ctx.fill();
       ctx.strokeStyle = ok ? C.tower : C.life; ctx.lineWidth = 1; ctx.stroke();
       ctx.globalAlpha = 0.75; upright(g.x,g.y,()=>drawTowerArt(ctx, build.type, 1, g.x, g.y-10, 0, G.t));
@@ -1619,7 +1725,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const sw = (o) => { if (!o) return; const t = o.x; o.x = o.y; o.y = t; };
     G.towers.forEach(sw); sw(G.item); G.floats.forEach(sw); G.rings.forEach(sw); sw(build.ghost);
     G.parts.forEach((o) => { sw(o); const v = o.vx; o.vx = o.vy; o.vy = v; });
-    G.enemies.forEach((e) => { sw(e); e.trail.forEach(sw); if (e.fly) { const t = e.bx; e.bx = e.by; e.by = t; } });
+    G.enemies.forEach((e) => { sw(e); e.trail.forEach(sw); if(e.flightPath)e.flightPath.forEach(p=>{[p[0],p[1]]=[p[1],p[0]];}); });
     const s2 = (b) => { let t = b.x1; b.x1 = b.y1; b.y1 = t; t = b.x2; b.x2 = b.y2; b.y2 = t; };
     G.beams.forEach(s2); G.zaps.forEach(s2); G.shells.forEach(s2);
   }
@@ -1653,6 +1759,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     const g = build.ghost;
     if (!g || G.gold < buildCost(build.type) || !canPlace(g.x, g.y)) return false;
     G.gold -= buildCost(build.type); G.towers.push(makeTower(build.type, g.x, g.y));
+    if(G.awaitingFirstTower){G.awaitingFirstTower=false;G.breakT=180;}
     G.selected = null; build.ghost = null;
     if (G.gold < buildCost(build.type)) build.on = false;
     return true;
@@ -1687,7 +1794,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   cv.addEventListener('pointerdown',ev=>{
     if(!G.started||G.over||codexOpen||drag||ev.isPrimary===false||ev.button>0)return;
     ev.preventDefault();cv.setPointerCapture(ev.pointerId);
-    drag={id:ev.pointerId,x:ev.clientX,y:ev.clientY,fx:view.focusX,fy:view.focusY,q:camera(),moved:false};
+    const q=camera();drag={id:ev.pointerId,x:ev.clientX,y:ev.clientY,fx:q.fx/W,fy:q.fy/H,q,moved:false};
   });
   cv.addEventListener('pointermove',ev=>{
     if(drag&&drag.id===ev.pointerId) {
@@ -1724,7 +1831,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     if (t && TMAP[t.type].slows) { const r = repairCost(t); if (r != null && G.gold >= r && !G.over) { G.gold -= r; t.hp = towerMax(t); ring(t.x, t.y, 40, '#5ad7ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'repaired', life: 40, colr: '#5ad7ff' }); } return; }
     const k = t && upgradeCost(t); if (t && k != null && G.gold >= k && !G.over) { G.gold -= k; upgrade(t); } }
   function doSell() { const t = G.selected; if (!t || G.over) return; G.gold += sellValue(t); G.towers.splice(G.towers.indexOf(t), 1); G.selected = null; }
-  function doNext() { if (G.isBreak && !G.over && G.started) G.breakT = 0; }
+  function doNext() { if (G.isBreak && !G.over && G.started && !G.awaitingFirstTower) G.breakT = 0; }
   function togglePause() { if (G.started && !G.over) G.paused = !G.paused; }
   function cycleSpeed() { G.speed = G.speed === 1 ? 2 : 1; } // 1× or 2× only
   $('bBuild').addEventListener('click', doBuild);
@@ -1840,7 +1947,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     $('vGold').textContent = G.gold; $('vLives').textContent = G.lives;
     $('vWave').textContent = G.wave + (G.wave > 0 && G.wave % 10 === 0 ? ' · BOSS' : '');
     const left = G.queue.length + G.enemies.length;
-    $('vStatus').textContent = G.paused ? 'Paused' : G.isBreak ? 'Next wave in ' + Math.ceil(G.breakT / 60) + 's' : left + ' enemies left';
+    $('vStatus').textContent = G.paused ? 'Paused' : G.awaitingFirstTower ? 'Place your first tower to begin' : G.isBreak ? 'Next wave in ' + Math.ceil(G.breakT / 60) + 's' : left + ' enemies left · Next wave in ' + Math.max(0,Math.ceil((WAVE_OVERLAP_TICKS-G.waveTicks)/60)) + 's';
     $('bPause').textContent = G.paused ? 'Resume' : 'Pause'; $('bSpeed').textContent = G.speed + '×';
     const t = G.selected, okSpot = build.ghost && canPlace(build.ghost.x, build.ghost.y), bc = buildCost(build.type); let uc = t ? upgradeCost(t) : null;
     $('bBuild').classList.toggle('on', build.on);
@@ -1853,7 +1960,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
     $('bUp').firstElementChild.textContent = tes ? 'Repair' : t && t.tier === 3 ? 'Master' : 'Upgrade';
     $('sUp').textContent = !t ? 'select tower' : uc == null ? (tes ? 'full health' : 'maxed') : '$' + uc;
     $('bSell').disabled = !t || G.over; $('sSell').textContent = t ? '+$' + sellValue(t) : 'select tower';
-    $('bNext').disabled = !G.isBreak || G.over || !G.started; $('sNext').textContent = G.isBreak ? 'now' : 'running';
+    $('bNext').disabled = !G.isBreak || G.over || !G.started || G.awaitingFirstTower; $('sNext').textContent = G.awaitingFirstTower ? 'place tower' : G.isBreak ? 'now' : 'running';
     $('bCancel').hidden = !build.on;
     $('picker').hidden = !build.on;
     $('picker').querySelectorAll('button').forEach((bt) => bt.classList.toggle('on', bt.dataset.t === build.type));
@@ -1873,9 +1980,10 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   }
   const overlay = $('overlay'), card = $('card');
   function showIntro() {
-    card.innerHTML = '<h1>Switchback Defense</h1><p>Hold the line against 80 enemy types and 10 bosses. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' +
+    card.innerHTML = '<h1>Switchback Defense</h1><p>Hold the line against 80 enemy types and 10 bosses. Build on hex cells. Place your first tower to start the wave countdown. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' +
       '<ul><li>Pick from three fire towers, each with three tiers, plus a Tesla coil that slows every enemy in range. Every upgrade costs more than the last, and a maxed tower can be mastered. The coil cannot be upgraded; repair it with gold instead. Selling returns half.</li>' +
       '<li>Every tower has health and every enemy can attack it, each pausing two to five seconds between strikes. Towers cannot be repaired, but any upgrade restores full health.</li>' +
+      '<li>Waves overlap after 20 game seconds if enemies remain. Clearing the field early starts a three-second break.</li>' +
       '<li>One flier in each flying wave carries cargo. Destroy the last flier and the crate drops: tap it within three seconds for a bonus of 15% of your cash.</li>' +
       '<li>New units unlock as you survive. Open the Codex to read about each one.</li>' +
       '<li>Keys: B build, U upgrade, S sell, N send wave, F speed, 1–4 pick tower, C codex, Space pause.</li></ul>' +
@@ -1897,7 +2005,7 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
   /* ---------- Loop ---------- */
   const GAME_PACE = 0.75; // the whole simulation runs at 75% of its original pace
   let last = performance.now(), acc = 0;
-  if(location.hash==='#qa') window.__gameQA={G,build,view,planWave,spawn,attack,special,UNITS,BOSSES,drawActor,drawTowerArt,SECTORS,setSector,get map(){return MAP},get pathCells(){return PATHSET},unproject,canPlace,project,toLocal,camera,makeTower,makeEnemy,startWave,start,layout,draw,get size(){return {W,H}}};
+  if(location.hash==='#qa') window.__gameQA={G,build,view,WAVE_OVERLAP_TICKS,flierGone,makeFlightPath,routeLen,get rivers(){return RIVERS},get waterCells(){return WATERSET},exteriorObjects,drawExterior,hexCenter,landHex,landCell,hexNeighbors,validHex,snap,placeGhost,tick,doNext,planWave,spawn,attack,special,UNITS,BOSSES,drawActor,drawTowerArt,SECTORS,setSector:i=>{setSector(i);path=MAP.map(([x,y])=>portrait?[y,x]:[x,y]);bgc=null;},get map(){return MAP},get pathCells(){return PATHSET},unproject,canPlace,project,toLocal,camera,makeTower,makeEnemy,startWave,start,layout,draw,get size(){return {W,H}}};
   function frame(now) {
     const dt = Math.min(100, now - last); last = now;
     if (G.item && G.started && !G.paused && !G.over && !codexOpen && (G.item.left -= dt) <= 0) G.item = null; // real time, ignores game speed
