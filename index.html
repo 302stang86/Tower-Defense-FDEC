@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Switchback">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#080f1c">
 <title>Switchback Defense</title>
@@ -188,6 +189,12 @@ button, .act, .tool, .pk, .go, .link { touch-action: manipulation; -webkit-tap-h
 
 /* ---- Touch devices: always landscape, full-screen board, HUD on top, command bar along the bottom ---- */
 .rotate { display: none; }
+.a2hs { position: fixed; z-index: 20; left: 50%; transform: translateX(-50%); top: max(46px, calc(env(safe-area-inset-top, 0px) + 40px)); display: flex; align-items: center; gap: 10px; max-width: min(560px, 86vw);
+  padding: 8px 10px 8px 14px; border-radius: 12px; font-size: 12.5px; line-height: 1.35; color: #e6edf3; background: rgba(8, 18, 32, 0.94); border: 1px solid rgba(135, 231, 238, 0.5); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5); }
+.a2hs[hidden] { display: none; }
+.a2hs .shr { display: inline-flex; vertical-align: -3px; color: #87e7ee; }
+.a2hs button { flex: none; min-height: 34px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1); color: #fff; font: inherit; font-weight: 600; }
+@media (orientation: portrait) { .a2hs { display: none !important; } }
 html.touch .cameraHint { display: none; }
 html.touch, html.touch body { position: fixed; inset: 0; width: 100%; height: 100%; max-height: none; margin: 0; padding: 0; display: block; gap: 0; overflow: hidden; background: #070d19; }
 html.touch .stage { position: fixed; inset: 0; border: 0; border-radius: 0; box-shadow: none; background: #070d19; }
@@ -260,6 +267,11 @@ html.touch .dexov { z-index: 30; }
     <button class="act" id="bNext"><span class="l">Send wave</span><span class="s" id="sNext">now</span></button>
   </div>
 </footer>
+
+<div class="a2hs" id="a2hs" hidden role="status">
+  <span><b>Full screen on iPhone:</b> tap <span class="shr" aria-hidden="true"><svg width="14" height="16" viewBox="0 0 14 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10V1.5M3.8 4.5 7 1.3l3.2 3.2M2 7.5v6.2h10V7.5"/></svg></span> Share, then &ldquo;Add to Home Screen&rdquo;, and open the game from your home screen.</span>
+  <button id="a2hsX" type="button">Got it</button>
+</div>
 
 <div class="rotate" id="rotate" role="alert">
   <svg width="86" height="86" viewBox="0 0 64 64" aria-hidden="true"><g class="rot" fill="none" stroke="#87e7ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="8" width="20" height="36" rx="4"/><path d="M30 38h4"/></g><path d="M14 52a22 22 0 0 0 36 0M50 52l-1-7M50 52l-7 1" fill="none" stroke="#ffb13d" stroke-width="3" stroke-linecap="round"/></svg>
@@ -1060,7 +1072,7 @@ html.touch .dexov { z-index: 30; }
     pickSector();
     Object.assign(G, {
       enemies: [], towers: [], beams: [], floats: [], rings: [], zaps: [], parts: [], shells: [], shake: 0, selected: null, inspect: null, banner: null, flash: 0, t: 0,
-      gold: 250, lives: 20, wave: 0, waveTicks: 0, queue: [], spawnT: 0, breakT: 180, isBreak: true, awaitingFirstTower: true,
+      gold: 500, lives: 20, wave: 0, waveTicks: 0, queue: [], spawnT: 0, breakT: 180, isBreak: true, awaitingFirstTower: true,
       over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: new Set(), nukeAim:false, nukeTarget:null, nukeReadyAt:0, nukes:[], bombs:[]
     });
     build.on = false; build.ghost = null;
@@ -1299,6 +1311,7 @@ html.touch .dexov { z-index: 30; }
   }
   const zap = (e, t, colr = '#ff9a3a', w = 2) => G.zaps.push({ x1: e.x, y1: e.y, x2: t.x, y2: t.y, life: 10, colr, w });
   const SHIELD_COST = 500;
+  const MAX_LIVES = 30;
   // Tesla zaps strip shields 50% faster than the hardest single hit of a fully upgraded tower
   const TESLA_SHIELD_DMG = 1.5 * Math.max(...TOWERS.filter((d) => !d.slows).map((d) => d.tiers[d.tiers.length - 1].dmg)) * (1 + 0.1 * MASTERY_MAX);
   const isFrozen = (t) => (t.frozenUntil || 0) > performance.now();
@@ -1492,7 +1505,7 @@ html.touch .dexov { z-index: 30; }
       if (e.hp <= 0) {
         if (d.revive && !e.revived) { e.revived = true; e.egg = 110; e.hp = Math.round(e.maxHp * 0.5); ring(e.x, e.y, 70, '#ffb030'); }
         else {
-          if (e.boss && !e.noRew) { G.lives += 3; ring(e.x, e.y, 70, '#ff6b6b'); G.floats.push({ x: e.x, y: e.y - e.r - 14, text: '+3 lives', life: 60 }); }
+          if (e.boss && !e.noRew) { const gain = Math.max(0, Math.min(3, MAX_LIVES - G.lives)); G.lives += gain; ring(e.x, e.y, 70, '#ff6b6b'); G.floats.push({ x: e.x, y: e.y - e.r - 14, text: gain ? '+' + gain + ' lives' : 'lives maxed', life: 60 }); }
           if (!e.noRew && e.reward) { G.gold += e.reward; G.floats.push({ x: e.x, y: e.y - e.r, text: '+' + e.reward, life: 40 }); }
           if (G.inspect === e) G.inspect = null;
           G.enemies.splice(i, 1); flierGone(e, true); continue;
@@ -2041,6 +2054,26 @@ html.touch .dexov { z-index: 30; }
     if (fsReq && !inFull()) { try { const p = fsReq.call(fsEl, { navigationUI: 'hide' }); Promise.resolve(p).then(lockLandscape).catch(() => {}); } catch (e) {} }
     else lockLandscape();
   }
+  /* ---------- iPhone: Home Screen install hint (Safari cannot force full screen) ---------- */
+  (function () {
+    const ua = navigator.userAgent || '', ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (!ios || standalone) return;
+    // Home Screen icon, drawn once so "Add to Home Screen" shows a proper tile
+    try {
+      const ic = document.createElement('canvas'); ic.width = ic.height = 180; const g = ic.getContext('2d');
+      const bg = g.createLinearGradient(0, 0, 180, 180); bg.addColorStop(0, '#1d3050'); bg.addColorStop(1, '#070d19'); g.fillStyle = bg; g.fillRect(0, 0, 180, 180);
+      g.strokeStyle = '#35e0ff'; g.lineWidth = 16; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(30, 52); g.lineTo(130, 52); g.lineTo(130, 90); g.lineTo(50, 90); g.lineTo(50, 128); g.lineTo(150, 128); g.stroke();
+      g.fillStyle = '#ffb13d'; g.beginPath(); g.arc(150, 128, 11, 0, Math.PI * 2); g.fill();
+      const lk = document.createElement('link'); lk.rel = 'apple-touch-icon'; lk.href = ic.toDataURL('image/png'); document.head.appendChild(lk);
+    } catch (e) {}
+    let gone = false; try { gone = localStorage.getItem('switchback-a2hs') === '1'; } catch (e) {}
+    if (gone) return;
+    const box = $('a2hs'); box.hidden = false;
+    const close = () => { box.hidden = true; try { localStorage.setItem('switchback-a2hs', '1'); } catch (e) {} };
+    $('a2hsX').addEventListener('click', close);
+    setTimeout(() => { box.hidden = true; }, 20000); // fades away on its own; shows again next visit until dismissed
+  })();
   const rotateBlocked = () => IS_TOUCH && window.innerWidth < window.innerHeight;
   if (IS_TOUCH && fsReq) { $('bFull').hidden = false; $('bFull').addEventListener('click', () => { if (inFull()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } else goFull(); }); }
   document.addEventListener('click', (e) => { if (e.target && e.target.id === 'goBtn') goFull(); });
@@ -2057,7 +2090,7 @@ html.touch .dexov { z-index: 30; }
     G.gold -= buildCost(build.type); G.towers.push(makeTower(build.type, g.x, g.y));
     if(G.awaitingFirstTower){G.awaitingFirstTower=false;G.breakT=180;}
     G.selected = null; build.ghost = null;
-    if (G.gold < buildCost(build.type)) build.on = false;
+    build.on = false; // one tower per Build press; the next tap selects towers again
     return true;
   }
   function tapField(ev) {
