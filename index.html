@@ -75,7 +75,7 @@ button { font: inherit; color: inherit; }
 .info .txt { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
 .info .txt b { color: var(--text); font-family: var(--display); font-weight: 600; }
 .link { background: none; border: 0; color: var(--tower); font-weight: 600; cursor: pointer; padding: 8px; }
-.btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .act { min-height: 58px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--btn); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
 .act:hover:not(:disabled) { background: var(--btn-hi); }
 .act .l { font-family: var(--display); font-weight: 700; font-size: 15px; }
@@ -83,10 +83,21 @@ button { font: inherit; color: inherit; }
 .act:disabled { opacity: 0.4; cursor: default; }
 .act.on { border-color: var(--tower); box-shadow: inset 0 0 0 1px var(--tower); }
 #bNuke .l { color: #ff9a9a; }
+#bKami .l { color: #ffd08a; }
+/* Special-attack cooldown: a dark fill drains from the top as the timer runs out; "Ready" lights the border, with a short pulse on the moment it becomes available. */
+#bNuke, #bKami { position: relative; overflow: hidden; }
+#bNuke .l, #bNuke .s, #bKami .l, #bKami .s { position: relative; z-index: 1; }
+.act .cd { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--cd, 0) * 100%); background: linear-gradient(to top, rgba(4,8,14,.62), rgba(4,8,14,.34)); border-top: 1px solid rgba(255,255,255,.28); pointer-events: none; z-index: 0; }
+#bNuke.cooling:disabled, #bKami.cooling:disabled { opacity: .85; }
+#bNuke.cooling .s, #bKami.cooling .s { color: #ffd08a; }
+#bNuke.ready, #bKami.ready { border-color: #6dff9a99; }
+#bNuke.ready .s, #bKami.ready .s { color: #8dffb4; font-weight: 600; }
+#bNuke.pulse, #bKami.pulse { animation: readyPulse .9s ease-out; }
+@keyframes readyPulse { 0% { box-shadow: 0 0 0 0 #6dff9acc, inset 0 0 14px #6dff9a88; } 100% { box-shadow: 0 0 0 12px #6dff9a00, inset 0 0 0 #6dff9a00; } }
 #bUp .l { color: var(--tower2); }
 #bBuild .l { color: var(--tower); }
 button:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
-.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 11, 14, 0.82); padding: 16px; z-index: 5; }
+.overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 11, 14, 0.86); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); padding: 16px; z-index: 20; }
 .card { width: min(380px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
 .card h1 { margin: 0; font-family: var(--display); font-size: 28px; letter-spacing: 0.04em; text-transform: uppercase; text-wrap: balance; }
 .card p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 15px; }
@@ -94,6 +105,45 @@ button:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
 .card .big { font-family: var(--display); font-size: 40px; font-weight: 700; color: var(--text); }
 .go { min-height: 52px; background: var(--tower); color: #06121f; border: 0; border-radius: 8px; font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .go.alt { background: var(--btn); color: var(--text); border: 1px solid var(--line); }
+.go:disabled, .go[disabled] { opacity: .5; cursor: default; filter: saturate(.6); }
+/* Main menu + leaderboard */
+.card.menu { width: min(880px, 100%); flex-direction: row; align-items: stretch; gap: 0; padding: 0; overflow-x: hidden; overflow-y: auto; }
+.menuMain { flex: 1 1 340px; display: flex; flex-direction: column; gap: 12px; padding: 26px; min-width: 0; justify-content: center; }
+.menuMain .go, .card .go { margin: 0; }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.logo svg { flex: none; }
+.logo .t { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1; letter-spacing: .06em; text-transform: uppercase; }
+.logo .t small { display: block; font-size: 14px; letter-spacing: .42em; color: #e3b668; margin-top: 7px; font-weight: 600; }
+.menuMain .tag { font-size: 14px; }
+.menuMain .stack { display: grid; gap: 8px; }
+.menuMain .duo, .card .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.menuMain .duo .go, .card .duo .go { min-height: 46px; font-size: 14px; }
+.menuMain .bestline { font-size: 13px; color: var(--muted); text-align: center; }
+.menuBoard { flex: 1 1 320px; display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; border-left: 1px solid var(--line); background: rgba(6, 10, 16, .38); min-width: 0; }
+.menuBoard h2 { margin: 0; font-family: var(--display); font-size: 18px; letter-spacing: .12em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.menuBoard h2 small { font-size: 12px; letter-spacing: .06em; color: var(--muted); font-weight: 500; text-transform: none; }
+.lb { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.lb li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 8px; border-radius: 6px; background: rgba(255, 255, 255, .035); font-size: 15px; font-variant-numeric: tabular-nums; }
+.lb li .rk { color: var(--muted); font-family: var(--display); font-weight: 700; }
+.lb li:nth-child(1) .rk { color: #ffd24d; } .lb li:nth-child(2) .rk { color: #d8e2ea; } .lb li:nth-child(3) .rk { color: #e0a06a; }
+.lb li .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb li .wv { color: var(--tower2); font-weight: 600; }
+.lb li.me { outline: 1px solid #6dff9a88; background: rgba(109, 255, 154, .09); }
+.lb li.msg { display: block; text-align: center; color: var(--muted); padding: 22px 8px; }
+.lbfoot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.lbsubmit { display: grid; gap: 8px; }
+.lbsubmit label { font-size: 14px; color: var(--muted); }
+.lbsubmit input { min-height: 46px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: #0d1624; color: var(--text); font-size: 16px; font-family: inherit; }
+.lbsubmit .lbmsg { font-size: 14px; min-height: 18px; color: var(--muted); }
+.lbsubmit .lbmsg.ok { color: #8dffb4; } .lbsubmit .lbmsg.bad { color: #ff9a9a; }
+@media (max-width: 720px) and (orientation: portrait) { .card.menu { flex-direction: column; } .menuBoard { border-left: 0; border-top: 1px solid var(--line); } }
+html.touch .card.menu { width: min(840px, 100%); }
+@media (max-height: 470px) {
+  .menuMain { padding: 12px 16px; gap: 7px; } .logo .t { font-size: 26px; } .logo .t small { font-size: 11px; margin-top: 4px; } .logo svg { width: 36px; height: 36px; }
+  .menuMain .tag { display: none; } .menuMain .go { min-height: 40px; font-size: 15px; } .menuMain .duo .go { min-height: 38px; font-size: 13px; }
+  .menuBoard { padding: 10px 14px; gap: 6px; } .menuBoard h2 { font-size: 15px; } .lb { gap: 3px; } .lb li { padding: 3px 8px; font-size: 13px; } .lb li.msg { padding: 14px 8px; }
+}
+
 .picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .pk { min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--btn); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 13px; }
 .pk small { font-size: 12px; color: var(--muted); font-weight: 500; }
@@ -120,7 +170,7 @@ button:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
 @media (orientation: landscape) and (max-height: 520px) {
   body { display: grid; grid-template-columns: minmax(0, 1fr) 210px; grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "hud hud" "stage bar"; column-gap: 12px; }
   .bar { justify-content: flex-end; }
-  .btns { grid-template-columns: 1fr 1fr 1fr; }
+  .btns { grid-template-columns: 1fr 1fr 1fr 1fr; }
   .act { min-height: 50px; }
   .hud { flex-wrap: nowrap; }
   .status { width: auto; }
@@ -226,7 +276,7 @@ html.touch .info .txt { display: block; -webkit-line-clamp: unset; overflow: vis
 html.touch .info .link { pointer-events: auto; padding: 0 0 0 10px; min-height: 0; min-width: 0; font-size: 12px; }
 html.touch .picker { flex: 0 1 auto; grid-template-columns: repeat(4, minmax(46px, 64px)); gap: 5px; }
 html.touch .pk { min-height: 46px; font-size: 12px; }
-html.touch .btns { flex: 0 1 auto; grid-template-columns: repeat(3, minmax(74px, 112px)); gap: 6px; }
+html.touch .btns { flex: 0 1 auto; grid-template-columns: repeat(4, minmax(66px, 112px)); gap: 6px; }
 html.touch .act { min-height: 50px; padding: 3px 2px; }
 html.touch .act .l { font-size: 13px; }
 html.touch .act .s { font-size: 11px; }
@@ -271,7 +321,8 @@ html.touch .dexov { z-index: 30; }
   <div class="picker" id="picker" hidden></div>
   <div class="btns">
     <button class="act" id="bBuild"><span class="l">Build</span><span class="s" id="sBuild">$100</span></button>
-    <button class="act" id="bNuke"><span class="l">Special Attack</span><span class="s" id="sNuke">$1,000 · Nuke</span></button>
+    <button class="act" id="bNuke"><span class="l">Nuke</span><span class="s" id="sNuke">$1,000</span><span class="cd"></span></button>
+    <button class="act" id="bKami"><span class="l">Kamikaze</span><span class="s" id="sKami">$1,000</span><span class="cd"></span></button>
     <button class="act" id="bNext"><span class="l">Send wave</span><span class="s" id="sNext">now</span></button>
   </div>
 </footer>
@@ -419,6 +470,79 @@ html.touch .dexov { z-index: 30; }
     }
     return null;
   }
+  /* ---------- Diagonal hex stretches ----------
+     About 10% of each route (by its final length) runs as a zig-zag along hex cells: every step is one hex-neighbour hop
+     (60 degrees off a horizontal leg, 30 degrees off a vertical leg). Each bend is rounded so enemies glide through it.
+     Stretches keep clear of other lanes, corners, the map edge and the merge lane. */
+  const DIAG_SHARE = 0.10, DIAG_MARGIN = HEX_X * 1.9, DIAG_RAD = HEX_X * 0.4, DIAG_CLEAR = 52;
+  function roundBends(v) {
+    const out = [v[0]];
+    for (let i = 1; i < v.length - 1; i++) {
+      const a = v[i - 1], p = v[i], b = v[i + 1];
+      const d1 = Math.hypot(a[0] - p[0], a[1] - p[1]), d2 = Math.hypot(b[0] - p[0], b[1] - p[1]), r = Math.min(DIAG_RAD, d1 / 2, d2 / 2);
+      const p1 = [p[0] + (a[0] - p[0]) / d1 * r, p[1] + (a[1] - p[1]) / d1 * r], p2 = [p[0] + (b[0] - p[0]) / d2 * r, p[1] + (b[1] - p[1]) / d2 * r];
+      for (let s = 0; s <= 3; s++) { const t = s / 3, u = 1 - t; out.push([u * u * p1[0] + 2 * u * t * p[0] + t * t * p2[0], u * u * p1[1] + 2 * u * t * p[1] + t * t * p2[1]]); }
+    }
+    out.push(v[v.length - 1]);
+    return out;
+  }
+  const polyLenOf = (P) => { let s = 0; for (let i = 1; i < P.length; i++) s += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); return s; };
+  // Length of the stretches that are neither horizontal nor vertical (the zig-zag runs and their rounded bends).
+  const diagOf = (P) => { let s = 0; for (let i = 1; i < P.length; i++) { const dx = Math.abs(P[i][0] - P[i - 1][0]), dy = Math.abs(P[i][1] - P[i - 1][1]); if (dx > 0.5 && dy > 0.5) s += Math.hypot(dx, dy); } return s; };
+  // C: corner polyline in pixels. skip: leg indexes to leave straight. obstacles: other polylines to stay clear of.
+  // base: length and diagonal length already on the enemy's full path (for the second route, the shared exit lane).
+  function addDiagonals(C, skip, obstacles, base = { len: 0, diag: 0 }) {
+    const LW = MAP_COLS * CELL, LH = MAP_ROWS * CELL, secs = [], legs = [], used = new Set();
+    const L0 = base.len + polyLenOf(C);
+    for (let k = 0; k < C.length - 1; k++) {
+      if (skip.has(k)) continue;
+      const a = C[k], b = C[k + 1], horiz = Math.abs(a[1] - b[1]) < 0.5;
+      legs.push({ k, a, b, len: Math.hypot(b[0] - a[0], b[1] - a[1]), step: horiz ? HEX_X / 2 : HEX_Y, swing: horiz ? HEX_Y : HEX_X / 2 });
+    }
+    const clear = (pts, k) => {
+      for (const q of pts) {
+        if (q[0] < 45 || q[0] > LW - 45 || q[1] < 45 || q[1] > LH - 45) return false;
+        for (let j = 0; j < C.length - 1; j++) if (j !== k && distSeg(q[0], q[1], C[j], C[j + 1]) < DIAG_CLEAR) return false;
+        for (const poly of obstacles) for (let j = 1; j < poly.length; j++) if (distSeg(q[0], q[1], poly[j - 1], poly[j]) < DIAG_CLEAR) return false;
+        for (const s of secs) for (let j = 1; j < s.pts.length; j++) if (distSeg(q[0], q[1], s.pts[j - 1], s.pts[j]) < DIAG_CLEAR) return false;
+      }
+      return true;
+    };
+    let diag = base.diag, extra = 0;
+    for (let attempt = 0; attempt < 240 && legs.length; attempt++) {
+      if (diag / (L0 + extra) >= 0.098) break;
+      const lg = legs[Math.floor(Math.random() * legs.length)];
+      if (used.has(lg.k)) continue;
+      const room = Math.floor((lg.len - 2 * DIAG_MARGIN) / lg.step), cap = 6 + 2 * Math.floor(Math.random() * 3);
+      const lead = HEX_X * 0.7, ux = (lg.b[0] - lg.a[0]) / lg.len, uy = (lg.b[1] - lg.a[1]) / lg.len;
+      let done = false;
+      // try the longest stretch first, then shorter ones, so the share lands as close to 10% as the lane allows
+      for (let n = Math.min(room, cap) & ~1; n >= 2 && !done; n -= 2) { // n is even, so the stretch ends back on the leg
+        const span = n * lg.step, s0 = DIAG_MARGIN + Math.random() * (lg.len - 2 * DIAG_MARGIN - span);
+        for (const side of Math.random() < 0.5 ? [1, -1] : [-1, 1]) {
+          const nx = -uy * side, ny = ux * side;
+          const v = [[lg.a[0] + ux * (s0 - lead), lg.a[1] + uy * (s0 - lead)]];
+          for (let j = 0; j <= n; j++) { const al = s0 + j * lg.step, off = (j & 1) ? lg.swing : 0; v.push([lg.a[0] + ux * al + nx * off, lg.a[1] + uy * al + ny * off]); }
+          v.push([lg.a[0] + ux * (s0 + span + lead), lg.a[1] + uy * (s0 + span + lead)]);
+          const raw = roundBends(v), pts = [raw[0]]; // keep samples at least 8 px apart so fast enemies never skip a point
+          for (let q = 1; q < raw.length - 1; q++) { const l = pts[pts.length - 1]; if (Math.hypot(raw[q][0] - l[0], raw[q][1] - l[1]) >= 8) pts.push(raw[q]); }
+          pts.push(raw[raw.length - 1]);
+          const dS = diagOf(pts), grow = polyLenOf(pts) - (span + 2 * lead);
+          if ((diag + dS) / (L0 + extra + grow) > DIAG_SHARE) continue;
+          if (!clear(pts, lg.k)) continue;
+          secs.push({ leg: lg.k, pts }); used.add(lg.k); diag += dS; extra += grow; done = true;
+          break;
+        }
+      }
+    }
+    const pts = [], idx = [];
+    for (let k = 0; k < C.length; k++) {
+      idx.push(pts.length); pts.push(C[k]);
+      const s = secs.find((q) => q.leg === k);
+      if (s) for (const p of s.pts) pts.push(p);
+    }
+    return { pts, idx };
+  }
   function setSector(i) {
     SECTOR = SECTORS[i];
     const cs = SECTOR.corners.map(([col,row]) => [Math.round(col * (MAP_COLS-1) / 15), Math.round(row*(MAP_ROWS-1)/9)]);
@@ -426,6 +550,20 @@ html.touch .dexov { z-index: 30; }
     MAP=cs.map(([col,row])=>[HEX_X*(col+.5),landHex(col,row).y]);
     const sr = genSecondRoute(cs);
     MAPB = sr ? sr.only : []; MAPR = sr ? sr.full : []; MERGE = sr ? sr.merge : null;
+    { // diagonal hex stretches on both routes; the merge lane, the shared exit lane, and the second route's final approach stay straight
+      let mergeLeg = -1;
+      if (MERGE && MAPB.length > 1) for (let k = 0; k < MAP.length - 1; k++) if (distSeg(MERGE[0], MERGE[1], MAP[k], MAP[k + 1]) < 1) { mergeLeg = k; break; }
+      const noDiag = new Set(); // the merge leg and everything after it (the shared exit lane) stay straight
+      if (mergeLeg >= 0) for (let k = mergeLeg; k < MAP.length - 1; k++) noDiag.add(k);
+      const main = addDiagonals(MAP, noDiag, MAPB.length > 1 ? [MAPB] : []);
+      if (mergeLeg >= 0) {
+        const tail = main.pts.slice(main.idx[mergeLeg + 1]);
+        const sub = addDiagonals(MAPB, new Set([MAPB.length - 2]), [main.pts], { len: polyLenOf(tail) + Math.hypot(tail[0][0] - MERGE[0], tail[0][1] - MERGE[1]), diag: diagOf(tail) });
+        MAPR = sub.pts.concat(tail);
+        MAPB = sub.pts;
+      }
+      MAP = main.pts;
+    }
     PATHSET=new Set();
     for(let row=0;row<MAP_ROWS;row++)for(let col=0;col<MAP_COLS;col++){
       const p=landHex(col,row);
@@ -676,7 +814,7 @@ html.touch .dexov { z-index: 30; }
       desc: 'Crackling coil that bleeds the speed out of everything near it, on the ground or in the air. It also discharges arcs of electricity into up to three (3) enemies at a time, and exposes concealed enemies while they stand in range. It cannot be upgraded; damaged coils are repaired for gold.',
       play: 'Electrical attack, slows every enemy in range (flyers included) and reveals invisible enemies. Repair instead of upgrade.',
       tiers: [
-        { name: 'Tesla Coil', look: 'Copper-wound pylon crowned with an arcing plasma orb', dmg: 14, range: 4.0, rate: 'Arc + Aura', cost: 160, slow: 0.4 }
+        { name: 'Tesla Coil', look: 'Copper-wound pylon crowned with an arcing plasma orb', dmg: 14, range: 5.0, rate: 'Arc + Aura', cost: 160, slow: 0.4 }
       ] }
   ];
   const TMAP = {};
@@ -1081,7 +1219,7 @@ html.touch .dexov { z-index: 30; }
     Object.assign(G, {
       enemies: [], towers: [], beams: [], floats: [], rings: [], zaps: [], parts: [], shells: [], shake: 0, selected: null, inspect: null, banner: null, flash: 0, t: 0,
       gold: 500, lives: 20, wave: 0, waveTicks: 0, queue: [], spawnT: 0, breakT: 180, isBreak: true, awaitingFirstTower: true,
-      over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: new Set(), nukeAim:false, nukeTarget:null, nukeReadyAt:0, nukes:[], bombs:[]
+      over: false, paused: false, speed: 1, started: false, objs: genObjs(), item: null, cargo: new Set(), nukeAim:false, nukeTarget:null, nukeReadyAt:0, nukes:[], bombs:[], planes:[], kamiReadyAt:0
     });
     build.on = false; build.ghost = null;
   }
@@ -1312,11 +1450,25 @@ html.touch .dexov { z-index: 30; }
   };
   function explode(sh) {
     for (const e of G.enemies) if (!e.fly && e.hp > 0 && !e.burrowed && e.egg <= 0 && Math.hypot(e.x - sh.x2, e.y - sh.y2) <= sh.R) hurt(e, sh.dmg);
-    ring(sh.x2, sh.y2, sh.R, '#ff8a2e');
+    SFX.play('shellBoom'); ring(sh.x2, sh.y2, sh.R, '#ff8a2e');
     spark(sh.x2, sh.y2, 0, 0, 16, sh.R * 0.45, '#ff7a1c', sh.R * 0.03); spark(sh.x2, sh.y2, 0, 0, 12, sh.R * 0.25, '#ffe27a', sh.R * 0.02);
     burst(sh.x2, sh.y2, 8 + sh.tier * 6, ['#ffb347', '#ff6a1f', '#ffe27a'], 3.6, 22, 2.4);
     burst(sh.x2, sh.y2, 3 + sh.tier * 2, ['#4a4440'], 1.2, 40, 5, false);
     G.shake = Math.max(G.shake, sh.tier * 2);
+  }
+  // Kill feedback: ember burst, soft smoke, and a ground ring; bosses get a larger blast with shake.
+  function deathFx(e) {
+    const r = e.r || 8, y = e.fly ? e.y - r * 0.9 : e.y - r * 0.3;
+    if (e.boss) {
+      ring(e.x, e.y, 95, '#ff9a3a'); ring(e.x, e.y, 55, '#fff2c3');
+      burst(e.x, y, 34, ['#fff2c3', '#ffb95d', '#ef704a'], 4, 28, 2.6);
+      burst(e.x, y, 10, ['#3a3430'], 1.4, 50, r * 0.5, false);
+      G.shake = Math.max(G.shake, 6); G.flash = Math.max(G.flash, 8);
+    } else {
+      burst(e.x, y, 6 + Math.round(r * 0.5), ['#fff2c3', '#ffb95d', '#ef704a'], 2.2 + r * 0.06, 18, 1.8);
+      burst(e.x, y, 2, ['#3a3430'], 0.9, 30, r * 0.45, false);
+      if (r > 10) ring(e.x, e.y, r * 2.4, '#ffb95d');
+    }
   }
   const zap = (e, t, colr = '#ff9a3a', w = 2) => G.zaps.push({ x1: e.x, y1: e.y, x2: t.x, y2: t.y, life: 10, colr, w });
   const SHIELD_COST = 500;
@@ -1519,6 +1671,7 @@ html.touch .dexov { z-index: 30; }
           if (e.boss && !e.noRew) { const gain = Math.max(0, Math.min(3, MAX_LIVES - G.lives)); G.lives += gain; ring(e.x, e.y, 70, '#ff6b6b'); G.floats.push({ x: e.x, y: e.y - e.r - 14, text: gain ? '+' + gain + ' lives' : 'lives maxed', life: 60 }); }
           if (!e.noRew && e.reward) { G.gold += e.reward; G.floats.push({ x: e.x, y: e.y - e.r, text: '+' + e.reward, life: 40 }); }
           if (G.inspect === e) G.inspect = null;
+          deathFx(e);
           SFX.play(e.boss ? 'bossDie' : 'die'); G.enemies.splice(i, 1); flierGone(e, true); continue;
         }
       }
@@ -1561,6 +1714,7 @@ html.touch .dexov { z-index: 30; }
       const p = shellPos(sh); spark(p.x, p.y, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, 12, 2 + sh.tier * 0.5, '#ff9a3a', -0.08);
       if (sh.t >= sh.dur) { explode(sh); G.shells.splice(i, 1); }
     }
+    updatePlanes();
     if (G.shake > 0) G.shake = G.shake < 0.4 ? 0 : G.shake * 0.85;
     if (G.flash > 0) G.flash--;
     if (G.banner && --G.banner.life <= 0) G.banner = null;
@@ -1713,8 +1867,41 @@ html.touch .dexov { z-index: 30; }
   function drawTower(t, selected) {
     const st = tstat(t);
     const rec = t.flash > 0 && t.type === 'mortar' ? t.flash * 0.6 : 0;
+    // Upgrade aura: a pulsing accent ring on the deck from tier 2, doubled with a soft fill at tier 3.
+    if (t.tier >= 2) {
+      const acc = TMAP[t.type].col, pulse = 0.5 + 0.5 * Math.sin(G.t * 0.06 + t.x * 0.05);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = acc;
+      ctx.globalAlpha = 0.16 + 0.12 * pulse; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.ellipse(t.x, t.y + 19, 27 + pulse * 2, 9 + pulse * 0.7, 0, 0, TAU); ctx.stroke();
+      if (t.tier >= 3) {
+        ctx.fillStyle = acc; ctx.globalAlpha = 0.07 + 0.05 * pulse;
+        ctx.beginPath(); ctx.ellipse(t.x, t.y + 19, 25, 8.5, 0, 0, TAU); ctx.fill();
+        ctx.globalAlpha = 0.14 + 0.1 * pulse; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(t.x, t.y + 19, 33 + pulse * 3, 11.5 + pulse, 0, 0, TAU); ctx.stroke();
+      }
+      ctx.restore();
+    }
     drawTowerArt(ctx, t.type, t.tier, t.x - Math.cos(t.angle) * rec, t.y - Math.sin(t.angle) * rec, t.angle, G.t);
     c = ctx;
+    // Tier 3 orbiting motes in the tower color; mastery adds rising gold sparks (one per mastery level).
+    if (t.tier >= 3) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = TMAP[t.type].col;
+      for (let i = 0; i < 3; i++) {
+        const a = G.t * 0.035 + i * TAU / 3;
+        ctx.globalAlpha = 0.55 + 0.35 * Math.sin(a * 2);
+        ctx.beginPath(); ctx.arc(t.x + Math.cos(a) * 30, t.y + 19 + Math.sin(a) * 10, 1.7, 0, TAU); ctx.fill();
+      }
+      ctx.restore();
+    }
+    if (t.mastery > 0) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = C.gold;
+      for (let i = 0; i < t.mastery; i++) {
+        const ph = (G.t * 0.011 + i / t.mastery) % 1;
+        ctx.globalAlpha = (1 - ph) * 0.9;
+        ctx.beginPath(); ctx.arc(t.x + Math.sin(i * 2.4 + G.t * 0.03) * 11, t.y - 4 - ph * 36, 1.3 + (1 - ph) * 0.5, 0, TAU); ctx.fill();
+      }
+      ctx.restore();
+    }
     if (t.flash > 0) {
       const k = t.flash / 7;
       ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, k);
@@ -1879,6 +2066,46 @@ html.touch .dexov { z-index: 30; }
     }
     ctx.restore(); ctx.globalAlpha = 1;
   }
+  // Per-sector weather, drawn in screen space from formulas of the game clock (no per-particle state).
+  // 0 Reactor Deck: drifting ash and rising embers. 1 Cryo Labs: snow. 2 Hangar Bay: wind-blown dust. 3 Bio-Dome Core: rising spores.
+  const wrap = (v, m) => ((v % m) + m) % m;
+  function drawWeather() {
+    const s = SECTORS.indexOf(SECTOR), N = IS_TOUCH ? 42 : 70, t = G.t;
+    ctx.save();
+    if (s === 0) {
+      ctx.fillStyle = '#9aa7ad';
+      for (let i = 0; i < N; i++) {
+        if (i % 7 === 0) continue;
+        const x = wrap(i * 97.3 + t * (0.28 + (i % 3) * 0.12) + Math.sin(t * 0.02 + i) * 14, SW), y = wrap(i * 61.1 + t * (0.3 + (i % 4) * 0.1), SH);
+        ctx.globalAlpha = 0.3 + 0.15 * (i % 3); ctx.beginPath(); ctx.arc(x, y, 1.1 + (i % 3) * 0.6, 0, TAU); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ff9a4a';
+      for (let i = 0; i < N; i += 7) {
+        const x = wrap(i * 83.9 + Math.sin(t * 0.03 + i) * 22, SW), y = wrap(i * 47.3 - t * (0.35 + (i % 3) * 0.12), SH);
+        ctx.globalAlpha = 0.45 + 0.4 * Math.sin(t * 0.08 + i) ** 2; ctx.beginPath(); ctx.arc(x, y, 1.7, 0, TAU); ctx.fill();
+      }
+    } else if (s === 1) {
+      ctx.fillStyle = '#eaf6ff';
+      for (let i = 0; i < N; i++) {
+        const near = i % 3 === 0, v = near ? 0.9 : 0.45 + (i % 3) * 0.1;
+        const x = wrap(i * 97.3 + Math.sin(t * 0.012 + i * 1.7) * (near ? 26 : 14) + t * 0.08, SW), y = wrap(i * 53.7 + t * v, SH);
+        ctx.globalAlpha = near ? 0.85 : 0.45; ctx.beginPath(); ctx.arc(x, y, near ? 2.4 : 1.4, 0, TAU); ctx.fill();
+      }
+    } else if (s === 2) {
+      ctx.strokeStyle = '#e8c88a'; ctx.lineCap = 'round'; ctx.lineWidth = 1;
+      for (let i = 0; i < N; i++) {
+        const sp = 1.1 + (i % 4) * 0.45, x = wrap(i * 89.7 + t * sp, SW + 40) - 20, y = wrap(i * 61.3, SH) + Math.sin(t * 0.015 + i) * 6, len = 6 + (i % 4) * 4;
+        ctx.globalAlpha = 0.2 + 0.1 * (i % 3); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y + len * 0.12); ctx.stroke();
+      }
+    } else {
+      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#8dffb4';
+      for (let i = 0; i < N; i++) {
+        const x = wrap(i * 101.9 + Math.sin(t * 0.014 + i * 2.1) * 20, SW), y = wrap(i * 57.1 - t * (0.18 + (i % 4) * 0.07), SH);
+        ctx.globalAlpha = 0.2 + 0.5 * Math.sin(t * 0.04 + i * 1.3) ** 2; ctx.beginPath(); ctx.arc(x, y, 1.5 + (i % 3) * 0.7, 0, TAU); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
   function draw() {
     c = ctx;
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
@@ -1926,6 +2153,7 @@ html.touch .dexov { z-index: 30; }
     G.enemies.filter(e=>!e.fly).forEach(e=>scene.push({depth:camera().b*e.x+camera().d*e.y,paint:()=>isoEnemy(e)}));
     scene.sort((a,b)=>a.depth-b.depth); scene.forEach(o=>o.paint());
     drawBombs();
+    drawPlanes();
     drawMarker();
     if (build.on && build.ghost) {
       const g = build.ghost, ok = canPlace(g.x, g.y) && G.gold >= buildCost(build.type), rg = TMAP[build.type].tiers[0].range * TILE;
@@ -1996,6 +2224,7 @@ html.touch .dexov { z-index: 30; }
     for (const fl of G.floats) { ctx.globalAlpha = Math.min(1, fl.life / 20); ctx.fillStyle = fl.colr || C.gold; upright(fl.x,fl.y,()=>ctx.fillText(fl.text, fl.x, fl.y)); ctx.globalAlpha = 1; }
     drawNukes();
     ctx.restore();
+    drawWeather();
     // Screen-space bloom keeps impacts soft and circular above the sloping deck.
     ctx.save(); ctx.globalCompositeOperation='screen';
     for(const rg of G.rings) {
@@ -2024,6 +2253,7 @@ html.touch .dexov { z-index: 30; }
     const sw = (o) => { if (!o) return; const t = o.x; o.x = o.y; o.y = t; };
     G.towers.forEach(sw); sw(G.item);sw(G.nukeTarget);G.nukes.forEach(sw); G.floats.forEach(sw); G.rings.forEach(sw); sw(build.ghost);
     G.parts.forEach((o) => { sw(o); const v = o.vx; o.vx = o.vy; o.vy = v; });
+    G.planes.forEach((o) => { sw(o); const h = o.hx; o.hx = o.hy; o.hy = h; o.a = Math.PI / 2 - o.a; });
     G.enemies.forEach((e) => { sw(e); e.trail.forEach(sw); if(e.flightPath)e.flightPath.forEach(p=>{[p[0],p[1]]=[p[1],p[0]];}); });
     const s2 = (b) => { let t = b.x1; b.x1 = b.y1; b.y1 = t; t = b.x2; b.x2 = b.y2; b.y2 = t; };
     G.beams.forEach(s2); G.zaps.forEach(s2); G.shells.forEach(s2);
@@ -2058,7 +2288,8 @@ html.touch .dexov { z-index: 30; }
 
   /* ---------- Sound + haptics (synthesised in the browser: no audio files) ---------- */
   const SFX = (() => {
-    let ac = null, master = null, nbuf = null, keep = null, sw = null, recent = [];
+    let ac = null, master = null, wetIn = null, nbuf = null, keep = null, sw = null, recent = [];
+    const J = (a = 0.07) => 1 + (Math.random() * 2 - 1) * a; // slight random pitch/level variation so repeats don't sound identical
     const lastAt = {}, prefs = { sound: true, haptics: true };
     try { const v = JSON.parse(localStorage.getItem('switchback-audio') || 'null'); if (v) { prefs.sound = v.sound !== false; prefs.haptics = v.haptics !== false; } } catch (e) {}
     const save = () => { try { localStorage.setItem('switchback-audio', JSON.stringify(prefs)); } catch (e) {} };
@@ -2067,9 +2298,15 @@ html.touch .dexov { z-index: 30; }
       if (ac) return ac;
       const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
       try {
-        ac = new C(); master = ac.createGain(); master.gain.value = 0.55;
+        ac = new C(); master = ac.createGain(); master.gain.value = 1.8;
         const comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
         nbuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        // outdoor-hall reverb: decaying noise impulse, mixed in for the big sounds
+        try {
+                  const len = Math.floor(ac.sampleRate * 1.4), ir = ac.createBuffer(2, len, ac.sampleRate);
+                  for (let ch = 0; ch < 2; ch++) { const dd = ir.getChannelData(ch); for (let i = 0; i < len; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+                  wetIn = ac.createGain(); wetIn.gain.value = 1; const cv = ac.createConvolver(); cv.buffer = ir; const wg = ac.createGain(); wg.gain.value = 0.38; wetIn.connect(cv); cv.connect(wg); wg.connect(master);
+        } catch (e) { wetIn = null; } // no reverb support: sounds still play dry
       } catch (e) { ac = null; }
       return ac;
     }
@@ -2079,44 +2316,49 @@ html.touch .dexov { z-index: 30; }
       try { keep = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA='); keep.loop = true; keep.volume = 0.01; const p = keep.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
     }
     function unlock() { const a = ctx(); if (a && a.state !== 'running') a.resume().catch(() => {}); keepAlive(); }
-    function tone(f0, f1, dur, type = 'sine', vol = 0.15, delay = 0) {
+    function tone(f0, f1, dur, type = 'sine', vol = 0.15, delay = 0, wet = 0) {
       const t0 = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
       o.type = type; o.frequency.setValueAtTime(f0, t0);
       if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
       g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.03);
+      o.connect(g); g.connect(master); if (wet && wetIn) { const w = ac.createGain(); w.gain.value = wet; g.connect(w); w.connect(wetIn); } o.start(t0); o.stop(t0 + dur + 0.03);
     }
-    function noise(dur, vol, ftype, f0, f1, delay = 0, q = 0.9) {
+    function noise(dur, vol, ftype, f0, f1, delay = 0, q = 0.9, wet = 0, atk = 0.008) {
       const t0 = ac.currentTime + delay, src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
       src.buffer = nbuf; f.type = ftype; f.Q.value = q; f.frequency.setValueAtTime(f0, t0); if (f1 && f1 !== f0) f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
-      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      src.connect(f); f.connect(g); g.connect(master); src.start(t0, Math.random() * 0.5); src.stop(t0 + dur + 0.03);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + atk); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(f); f.connect(g); g.connect(master); if (wet && wetIn) { const w = ac.createGain(); w.gain.value = wet; g.connect(w); w.connect(wetIn); } src.start(t0, Math.random() * 0.5); src.stop(t0 + dur + 0.03);
     }
     // gap = minimum milliseconds between repeats; pri = always allowed
+    // layered "crack + body + tail" building blocks
+    const crack = (vol = 0.3, hp = 1800) => noise(0.05, vol, 'highpass', hp, hp * 2.2, 0, 0.7, 0, 0.002);
+    const thump = (f0, f1, dur, vol, wet = 0.2) => tone(f0 * J(), f1, dur, 'sine', vol, 0, wet);
+    const tail = (dur, vol, f0, f1, delay = 0, wet = 0.5) => noise(dur, vol, 'lowpass', f0, f1, delay, 0.6, wet, 0.02);
     const defs = {
-      mortar:   { gap: 90,  fn: () => { noise(0.14, 0.24, 'lowpass', 900, 200); tone(150, 45, 0.2, 'sine', 0.32); } },
-      flame:    { gap: 120, fn: () => noise(0.12, 0.07, 'bandpass', 900, 450, 0, 0.8) },
-      solar:    { gap: 70,  fn: () => tone(1100, 1500, 0.08, 'triangle', 0.05) },
-      tesla:    { gap: 160, fn: () => { tone(260, 70, 0.13, 'sawtooth', 0.09); noise(0.09, 0.09, 'highpass', 3000, 5200); } },
-      die:      { gap: 45,  fn: () => { noise(0.09, 0.16, 'bandpass', 1200, 400); tone(320, 110, 0.09, 'square', 0.05); } },
-      bossDie:  { gap: 200, pri: 1, fn: () => { noise(0.55, 0.3, 'lowpass', 1200, 100); tone(120, 35, 0.6, 'sine', 0.45); } },
-      towerHit: { gap: 80,  fn: () => { tone(150, 70, 0.08, 'square', 0.06); noise(0.05, 0.06, 'lowpass', 2000, 800); } },
-      shieldBreak: { gap: 150, pri: 1, fn: () => { tone(1500, 300, 0.3, 'triangle', 0.16); noise(0.22, 0.1, 'highpass', 2500, 6000); } },
-      bombDrop: { gap: 200, fn: () => tone(1400, 380, 0.42, 'sine', 0.07) },
-      freeze:   { gap: 150, pri: 1, fn: () => { noise(0.32, 0.13, 'highpass', 3500, 7000); tone(2200, 1600, 0.26, 'triangle', 0.06); } },
-      nukeLaunch: { gap: 400, pri: 1, fn: () => tone(300, 1800, 0.62, 'sawtooth', 0.05) },
-      nukeBoom: { gap: 400, pri: 1, fn: () => { noise(1.1, 0.5, 'lowpass', 1400, 60); tone(95, 28, 1.0, 'sine', 0.65); } },
-      place:    { gap: 60,  pri: 1, fn: () => { tone(330, 0, 0.09, 'square', 0.07); tone(495, 0, 0.11, 'square', 0.07, 0.07); } },
-      upgrade:  { gap: 100, pri: 1, fn: () => [392, 523, 659, 784].forEach((f, i) => tone(f, 0, 0.12, 'triangle', 0.1, i * 0.06)) },
-      shield:   { gap: 100, pri: 1, fn: () => { tone(500, 1000, 0.3, 'sawtooth', 0.05); tone(1000, 1200, 0.3, 'triangle', 0.08, 0.12); } },
-      repair:   { gap: 100, pri: 1, fn: () => { tone(700, 0, 0.06, 'square', 0.05); tone(900, 0, 0.06, 'square', 0.05, 0.08); } },
-      coin:     { gap: 100, pri: 1, fn: () => { tone(988, 0, 0.08, 'square', 0.06); tone(1319, 0, 0.22, 'square', 0.06, 0.07); } },
-      wave:     { gap: 500, pri: 1, fn: () => { tone(196, 0, 0.35, 'sawtooth', 0.09); tone(247, 0, 0.5, 'sawtooth', 0.09, 0.3); } },
-      bossWave: { gap: 500, pri: 1, fn: () => { for (let i = 0; i < 3; i++) tone(98, 90, 0.4, 'sawtooth', 0.15, i * 0.5); noise(1.6, 0.14, 'lowpass', 300, 120); } },
-      lifeLost: { gap: 150, pri: 1, fn: () => { tone(220, 70, 0.36, 'sawtooth', 0.12); noise(0.22, 0.14, 'lowpass', 600, 150); } },
-      gameOver: { gap: 1000, pri: 1, fn: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0, 0.35, 'triangle', 0.14, i * 0.28)) },
-      select:   { gap: 40,  pri: 1, fn: () => tone(900, 0, 0.045, 'sine', 0.07) },
-      ui:       { gap: 40,  pri: 1, fn: () => tone(600, 0, 0.035, 'sine', 0.05) }
+      mortar:   { gap: 90,  fn: () => { crack(0.2, 900); thump(130, 36, 0.34, 0.5, 0.35); noise(0.22, 0.3, 'lowpass', 1100, 160, 0, 0.7, 0.3, 0.004); tail(0.8, 0.1, 500, 120, 0.05, 0.7); } },
+      shellBoom:{ gap: 60,  fn: () => { crack(0.16, 700); thump(95, 30, 0.45, 0.4, 0.5); tail(0.9, 0.18, 1400, 90, 0, 0.8); } },
+      flame:    { gap: 110, fn: () => { noise(0.3, 0.26, 'bandpass', 420 * J(), 1100, 0, 0.7, 0.2, 0.06); noise(0.28, 0.24, 'lowpass', 260, 120, 0, 0.5, 0, 0.05); } },
+      solar:    { gap: 70,  fn: () => { tone(2200 * J(), 700, 0.14, 'sawtooth', 0.09, 0, 0.15); tone(2210 * J(), 710, 0.14, 'square', 0.05); noise(0.06, 0.1, 'highpass', 6000, 9000); } },
+      tesla:    { gap: 150, fn: () => { for (let i = 0; i < 6; i++) noise(0.025 + Math.random() * 0.03, 0.12, 'highpass', 2500 + Math.random() * 3000, 8000, Math.random() * 0.13, 0.6, 0.15, 0.001); tone(95 * J(), 80, 0.16, 'sawtooth', 0.08, 0, 0.1); tone(190, 160, 0.14, 'square', 0.025); } },
+      die:      { gap: 45,  fn: () => { noise(0.1, 0.24, 'bandpass', 900 * J(), 280, 0, 1.4, 0.12, 0.003); thump(210, 60, 0.13, 0.32, 0.1); crack(0.1, 2500); } },
+      bossDie:  { gap: 200, pri: 1, fn: () => { crack(0.3, 1000); thump(110, 26, 1.0, 0.7, 0.6); tail(1.7, 0.3, 2400, 70, 0, 0.9); noise(0.9, 0.18, 'lowpass', 300, 60, 0.15, 0.6, 0.5, 0.1); } },
+      towerHit: { gap: 70,  fn: () => { crack(0.14, 2200); [[420, 0.1], [733, 0.07], [1180, 0.05], [1730, 0.03]].forEach(([f, v]) => tone(f * J(0.03), 0, 0.22, 'sine', v, 0, 0.15)); thump(130, 60, 0.1, 0.18, 0); } },
+      shieldBreak: { gap: 150, pri: 1, fn: () => { crack(0.18, 3000); for (let i = 0; i < 9; i++) { noise(0.05 + Math.random() * 0.08, 0.12, 'highpass', 4000 + Math.random() * 4000, 9000, Math.random() * 0.22, 0.8, 0.4, 0.002); tone(2400 + Math.random() * 2600, 0, 0.12, 'sine', 0.04, Math.random() * 0.2, 0.4); } tone(1400, 260, 0.3, 'triangle', 0.1, 0, 0.3); } },
+      bombDrop: { gap: 200, fn: () => { noise(0.45, 0.18, 'bandpass', 2600, 520, 0, 6, 0.1, 0.05); tone(1700, 420, 0.45, 'sine', 0.1); } },
+      freeze:   { gap: 150, pri: 1, fn: () => { crack(0.1, 4000); noise(0.45, 0.1, 'highpass', 5000, 9000, 0, 0.7, 0.3, 0.03); for (let i = 0; i < 6; i++) tone(2400 + Math.random() * 2400, 0, 0.18, 'sine', 0.045, i * 0.04 + Math.random() * 0.04, 0.5); } },
+      nukeLaunch: { gap: 400, pri: 1, fn: () => { noise(0.65, 0.3, 'bandpass', 260, 2200, 0, 1.2, 0.2, 0.1); tone(180, 700, 0.62, 'sawtooth', 0.08, 0, 0.1); } },
+      nukeBoom: { gap: 400, pri: 1, fn: () => { crack(0.4, 600); thump(72, 20, 1.8, 0.9, 0.7); noise(0.5, 0.35, 'lowpass', 2600, 120, 0, 0.6, 0.6, 0.004); tail(2.6, 0.4, 3200, 50, 0.05, 1); noise(1.6, 0.2, 'lowpass', 220, 40, 0.2, 0.6, 0.6, 0.15); } },
+      place:    { gap: 60,  pri: 1, fn: () => { thump(210, 75, 0.12, 0.3, 0.05); noise(0.04, 0.12, 'bandpass', 1800, 900, 0, 1.2, 0, 0.002); tone(660, 0, 0.1, 'triangle', 0.07, 0.06); tone(990, 0, 0.14, 'triangle', 0.06, 0.12); } },
+      upgrade:  { gap: 100, pri: 1, fn: () => { for (let i = 0; i < 3; i++) noise(0.03, 0.1, 'bandpass', 2400, 1500, i * 0.06, 1.5, 0, 0.002); [523, 659, 784, 1047].forEach((f, i) => tone(f, 0, 0.3, 'triangle', 0.08, 0.2 + i * 0.06, 0.3)); } },
+      shield:   { gap: 100, pri: 1, fn: () => { tone(220, 880, 0.35, 'sawtooth', 0.05, 0, 0.3); tone(440, 1760, 0.35, 'triangle', 0.05, 0, 0.3); tone(1320, 0, 0.35, 'sine', 0.06, 0.3, 0.5); } },
+      repair:   { gap: 100, pri: 1, fn: () => { for (let i = 0; i < 4; i++) { noise(0.03, 0.12, 'bandpass', 2000 + i * 300, 1500, i * 0.07, 1.5, 0, 0.002); thump(160, 90, 0.05, 0.1, 0); } tone(880, 0, 0.18, 'triangle', 0.05, 0.3, 0.2); } },
+      coin:     { gap: 100, pri: 1, fn: () => { tone(1568, 0, 0.1, 'square', 0.045); tone(2093, 0, 0.35, 'square', 0.045, 0.08, 0.3); tone(3136, 0, 0.3, 'sine', 0.03, 0.08, 0.3); } },
+      wave:     { gap: 500, pri: 1, fn: () => { tone(147, 0, 0.5, 'sawtooth', 0.09, 0, 0.35); tone(148.5, 0, 0.5, 'sawtooth', 0.08, 0, 0.35); tone(220, 0, 0.7, 'sawtooth', 0.09, 0.4, 0.4); tone(221.5, 0, 0.7, 'sawtooth', 0.08, 0.4, 0.4); } },
+      bossWave: { gap: 500, pri: 1, fn: () => { for (let i = 0; i < 3; i++) { tone(73, 68, 0.55, 'sawtooth', 0.15, i * 0.62, 0.5); tone(73.7, 68.5, 0.55, 'square', 0.07, i * 0.62, 0.5); } tail(2.4, 0.16, 280, 60, 0, 0.8); } },
+      lifeLost: { gap: 150, pri: 1, fn: () => { thump(120, 38, 0.3, 0.4, 0.3); tone(240, 70, 0.4, 'sawtooth', 0.1, 0, 0.3); noise(0.3, 0.14, 'lowpass', 700, 150, 0, 0.7, 0.3, 0.01); } },
+      gameOver: { gap: 1000, pri: 1, fn: () => { [392, 349, 311, 196].forEach((f, i) => { tone(f, 0, 0.6, 'triangle', 0.12, i * 0.3, 0.5); tone(f / 2, 0, 0.6, 'sine', 0.1, i * 0.3, 0.4); }); thump(80, 28, 0.9, 0.4, 0.5); } },
+      select:   { gap: 40,  pri: 1, fn: () => { noise(0.025, 0.2, 'bandpass', 2600, 1800, 0, 1.4, 0, 0.002); tone(1100 * J(0.03), 0, 0.05, 'sine', 0.1); } },
+      ui:       { gap: 40,  pri: 1, fn: () => { noise(0.02, 0.16, 'bandpass', 2000, 1400, 0, 1.4, 0, 0.002); tone(700 * J(0.03), 0, 0.04, 'sine', 0.07); } }
     };
     function play(name) {
       if (!prefs.sound) return;
@@ -2201,6 +2443,7 @@ html.touch .dexov { z-index: 30; }
     const g = build.ghost;
     if (!g || G.gold < buildCost(build.type) || !canPlace(g.x, g.y)) return false;
     G.gold -= buildCost(build.type); G.towers.push(makeTower(build.type, g.x, g.y));
+    { const col = TMAP[build.type].col; ring(g.x, g.y, 46, col); burst(g.x, g.y, 12, [col, '#ffffff'], 2.4, 20, 2); }
     if(G.awaitingFirstTower){G.awaitingFirstTower=false;G.breakT=180;}
     G.selected = null; build.ghost = null;
     build.on = false; // one tower per Build press; the next tap selects towers again
@@ -2312,7 +2555,7 @@ html.touch .dexov { z-index: 30; }
     if (t && TMAP[t.type].slows) { const r = repairCost(t); if (r != null && G.gold >= r && !G.over) { G.gold -= r; t.hp = towerMax(t); SFX.play('repair'); SFX.haptic(20); ring(t.x, t.y, 40, '#5ad7ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'repaired', life: 40, colr: '#5ad7ff' }); } return; }
     const sm = t && markerInfo(t);
     if (sm && sm.shield) { if (sm.ok && !G.over) { G.gold -= SHIELD_COST; t.shield = t.shieldMax = towerMax(t); SFX.play('shield'); SFX.haptic(25); ring(t.x, t.y, 44, '#7fd8ff'); G.floats.push({ x: t.x, y: t.y - 26, text: 'shield up', life: 40, colr: '#7fd8ff' }); } return; }
-    const k = t && upgradeCost(t); if (t && k != null && G.gold >= k && !G.over) { G.gold -= k; upgrade(t); SFX.play('upgrade'); SFX.haptic(25); } }
+    const k = t && upgradeCost(t); if (t && k != null && G.gold >= k && !G.over) { G.gold -= k; upgrade(t); { const col = TMAP[t.type].col; ring(t.x, t.y, 50 + t.tier * 6, col); burst(t.x, t.y - 10, 12 + t.tier * 4, [col, '#fff6c0'], 2.8, 22, 2.2); } SFX.play('upgrade'); SFX.haptic(25); } }
   const NUKE_COST=1000,NUKE_RADIUS=HEX_X*6,NUKE_DAMAGE=5000,NUKE_COOLDOWN=15000;
   function doNuke(){
     if(!G.started||G.over||G.paused||codexOpen||G.gold<NUKE_COST||performance.now()<G.nukeReadyAt)return;
@@ -2393,11 +2636,105 @@ html.touch .dexov { z-index: 30; }
     }
   }
 
+  /* ---------- Kamikaze: five planes that hunt flyers first, then ground groups ---------- */
+  const KAMI_COST = 1000, KAMI_COOLDOWN = 15000, KAMI_COUNT = 5, KAMI_DAMAGE = NUKE_DAMAGE / 4, KAMI_RADIUS = HEX_X * 4, KAMI_SPEED = 6.5;
+  const kamiLive = (e) => e.hp > 0 && e.egg <= 0 && !e.burrowed && detected(e);
+  function doKami() {
+    if (!G.started || G.over || G.paused || codexOpen || G.gold < KAMI_COST || performance.now() < G.kamiReadyAt || !G.enemies.some(kamiLive)) return;
+    cancelBuild(); G.gold -= KAMI_COST; G.kamiReadyAt = performance.now() + KAMI_COOLDOWN;
+    const ex = path[path.length - 1][0], ey = path[path.length - 1][1], base = Math.atan2(H / 2 - ey, W / 2 - ex);
+    for (let i = 0; i < KAMI_COUNT; i++) G.planes.push({ x: ex + (i - 2) * 8, y: ey + (i - 2) * 5, hx: ex, hy: ey, a: base + (i - 2) * 0.25, delay: i * 12, age: 0, idle: 0, target: null });
+    SFX.play('nukeLaunch'); SFX.haptic(30);
+  }
+  // Impact: a flyer takes the hit alone; a ground target explodes in a four-hex blast. Only enemies are ever damaged, so towers are safe.
+  function kamiDetonate(t) {
+    const o = { melt: true, pierceShield: true };
+    if (t.fly) {
+      hurt(t, KAMI_DAMAGE, o);
+      const y = t.y - t.r * 0.9;
+      ring(t.x, t.y, 46, '#ffe27a'); burst(t.x, y, 14, ['#fff2c3', '#ffb347', '#ff6a1f'], 3.2, 22, 2.2); burst(t.x, y, 4, ['#3a3430'], 1.1, 34, 4, false);
+      G.shake = Math.max(G.shake, 2); SFX.play('die');
+    } else {
+      for (const e of G.enemies) if (!e.fly && kamiLive(e) && Math.hypot(e.x - t.x, e.y - t.y) <= KAMI_RADIUS) hurt(e, KAMI_DAMAGE, o);
+      ring(t.x, t.y, KAMI_RADIUS, '#ff8a2e'); ring(t.x, t.y, KAMI_RADIUS * 0.5, '#fff2c3');
+      spark(t.x, t.y, 0, 0, 16, KAMI_RADIUS * 0.3, '#ff7a1c', KAMI_RADIUS * 0.02); spark(t.x, t.y, 0, 0, 12, KAMI_RADIUS * 0.16, '#ffe27a', KAMI_RADIUS * 0.012);
+      burst(t.x, t.y, 26, ['#fff2c3', '#ffb347', '#ff6a1f'], 4.2, 26, 2.6); burst(t.x, t.y, 8, ['#3a3430'], 1.4, 48, 5, false);
+      G.shake = Math.max(G.shake, 4); SFX.play('shellBoom');
+    }
+  }
+  function updatePlanes() {
+    const P = G.planes; if (!P.length) return;
+    const flyers = G.enemies.filter((e) => e.fly && kamiLive(e)), ground = G.enemies.filter((e) => !e.fly && kamiLive(e));
+    for (let i = P.length - 1; i >= 0; i--) {
+      const p = P[i];
+      if (p.delay > 0) { p.delay--; continue; }
+      p.age++;
+      let t = p.target;
+      if (t && !(t.hp > 0 && kamiLive(t) && G.enemies.includes(t))) t = p.target = null;
+      // flyers always come first: a plane without a flyer target looks for one no other plane is chasing, and re-checks every 10 ticks
+      if ((!t || !t.fly) && (!t || p.age % 10 === 1)) {
+        const taken = new Set(P.filter((q) => q !== p && q.target && q.target.fly).map((q) => q.target));
+        let best = null, bd = Infinity;
+        for (const e of flyers) { if (taken.has(e)) continue; const d = Math.hypot(e.x - p.x, e.y - p.y); if (d < bd) { bd = d; best = e; } }
+        if (best) t = p.target = best;
+        else if (!t && ground.length) {
+          // no flyer left: pick the biggest ground group that no other plane is already heading for
+          const others = P.filter((q) => q !== p && q.target && !q.target.fly).map((q) => q.target);
+          let bestG = null, bs = -1;
+          for (const e of ground) {
+            if (others.some((o) => Math.hypot(o.x - e.x, o.y - e.y) < KAMI_RADIUS * 0.7)) continue;
+            let n = 0; for (const f of ground) if (Math.hypot(f.x - e.x, f.y - e.y) <= KAMI_RADIUS) n++;
+            const sc = n + e.travel / 1e6; if (sc > bs) { bs = sc; bestG = e; }
+          }
+          if (!bestG) for (const e of ground) if (!bestG || e.travel > bestG.travel) bestG = e; // every group is covered: back up the lead enemy
+          t = p.target = bestG;
+        }
+      }
+      let tx, ty;
+      if (t) { tx = t.x; ty = t.y; } else { p.idle++; const a = p.idle * 0.03; tx = (p.hx + W / 2) / 2 + Math.cos(a) * 120; ty = (p.hy + H / 2) / 2 + Math.sin(a) * 120; }
+      const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
+      let diff = Math.atan2(dy, dx) - p.a; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      const turn = t && d < 70 ? 0.3 : 0.11; // tighten the turn on the final approach so a plane never orbits its target
+      p.a += Math.max(-turn, Math.min(turn, diff));
+      p.x += Math.cos(p.a) * KAMI_SPEED; p.y += Math.sin(p.a) * KAMI_SPEED;
+      if (p.age % 2 === 0) spark(p.x - Math.cos(p.a) * 9, p.y - Math.sin(p.a) * 9, 0, 0, 16, 1.7, '#ffcf8a', -0.07);
+      if (t && Math.hypot(t.x - p.x, t.y - p.y) <= (t.r || 10) + 12) { kamiDetonate(t); P.splice(i, 1); continue; }
+      if (p.age > 1500 || p.idle > 360) { burst(p.x, p.y, 8, ['#ffcf8a', '#ff9a3a'], 2, 18, 1.8); P.splice(i, 1); } // nothing left to hit: the plane burns out
+    }
+  }
+  function drawPlanes() {
+    for (const p of G.planes) {
+      if (p.delay > 0) continue;
+      const q = camera(), ca = Math.cos(p.a), sa = Math.sin(p.a), ang = Math.atan2(q.b * ca + q.d * sa, q.a * ca + q.c * sa);
+      c = ctx; ctx.globalAlpha = 0.28; ell(p.x + 5, p.y + 5, 9, 4, '#000'); ctx.globalAlpha = 1;
+      upright(p.x, p.y, () => {
+        ctx.save(); ctx.translate(p.x, p.y - 30); ctx.rotate(ang); c = ctx;
+        glow(-10, 0, 10, '#ffb36b', 0.6);
+        poly('#7f93a6', 12, 0, -7, -9, -3.5, 0, -7, 9);
+        poly('#c7d4de', 12, 0, -5, -2.4, -7, 0, -5, 2.4);
+        ln(-5, -7.5, 1, -2, 1.2, '#ff9a3a'); ln(-5, 7.5, 1, 2, 1.2, '#ff9a3a');
+        circ(5, 0, 1.6, '#ffe9b0');
+        ctx.restore(); c = ctx;
+      });
+    }
+  }
+
+  // Cooldown visuals for the special-attack buttons: drain fill while cooling, green "ready" border once usable, one pulse when the timer ends.
+  const cdWas = {};
+  function cdFx(id, left, total) {
+    const b = $(id), cooling = left > 0;
+    b.style.setProperty('--cd', cooling ? Math.min(1, left / total).toFixed(3) : '0');
+    b.classList.toggle('cooling', cooling);
+    b.classList.toggle('ready', !cooling && !b.disabled);
+    if (cdWas[id] && !cooling && G.started && !G.over) { b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse'); setTimeout(() => b.classList.remove('pulse'), 950); }
+    cdWas[id] = cooling;
+  }
   function doNext() { if (G.isBreak && !G.over && G.started && !G.awaitingFirstTower) G.breakT = 0; }
   function togglePause() { if (G.started && !G.over) G.paused = !G.paused; }
   function cycleSpeed() { G.speed = G.speed === 1 ? 2 : 1; } // 1× or 2× only
   $('bBuild').addEventListener('click', doBuild);
   $('bNuke').addEventListener('click', doNuke);
+  $('bKami').addEventListener('click', doKami);
   $('bNext').addEventListener('click', doNext);
   $('bPause').addEventListener('click', togglePause);
   $('bSpeed').addEventListener('click', cycleSpeed);
@@ -2405,11 +2742,12 @@ html.touch .dexov { z-index: 30; }
   $('dexClose').addEventListener('click', () => openCodex(false));
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return; // typing a leaderboard name must not trigger shortcuts
     const k = e.key.toLowerCase();
     if (k === 'c' && (!G.started || G.over || codexOpen)) { openCodex(!codexOpen); return; }
     if (codexOpen) { if (k === 'escape') openCodex(false); return; }
     if (!G.started || G.over) { if (k === 'enter') start(); return; }
-    if (k === 'b') doBuild(); else if (k === 'u') doUpgrade(); else if (k === 's') doNuke();
+    if (k === 'b') doBuild(); else if (k === 'u') doUpgrade(); else if (k === 's') doNuke(); else if (k === 'k') doKami();
     else if (k === 'n') doNext(); else if (k >= '1' && k <= '4') { build.type = TOWERS[+k - 1].id; if (!build.on) doBuild(); } else if (k === 'f') cycleSpeed();
     else if (k === 'escape') { cancelBuild(); G.selected = null; G.inspect = null; }
     else if (k === ' ') { e.preventDefault(); togglePause(); }
@@ -2519,7 +2857,11 @@ html.touch .dexov { z-index: 30; }
     const cooldown=Math.max(0,G.nukeReadyAt-performance.now());
     $('bNuke').disabled=!G.started||G.over||G.paused||G.gold<NUKE_COST||cooldown>0;
     $('bNuke').classList.toggle('on',G.nukeAim);
-    $('sNuke').textContent=cooldown>0?Math.ceil(cooldown/1000)+'s cooldown':G.nukeAim?'Tap field · $1,000':'$1,000 · Nuke';
+    $('sNuke').textContent=cooldown>0?Math.ceil(cooldown/1000)+'s cooldown':G.nukeAim?'Tap field · $1,000':G.gold>=NUKE_COST?'Ready':'$1,000';
+    const kCool=Math.max(0,G.kamiReadyAt-performance.now()),kTargets=G.enemies.some(kamiLive);
+    $('bKami').disabled=!G.started||G.over||G.paused||G.gold<KAMI_COST||kCool>0||!kTargets;
+    $('sKami').textContent=kCool>0?Math.ceil(kCool/1000)+'s cooldown':!kTargets?'no targets':G.gold>=KAMI_COST?'Ready':'$1,000';
+    cdFx('bNuke',cooldown,NUKE_COOLDOWN);cdFx('bKami',kCool,KAMI_COOLDOWN);
     $('bNext').disabled = !G.isBreak || G.over || !G.started || G.awaitingFirstTower; $('sNext').textContent = G.awaitingFirstTower ? 'place tower' : G.isBreak ? 'now' : 'running';
     $('bCancel').hidden = !build.on;
     $('picker').hidden = !build.on;
@@ -2541,34 +2883,141 @@ html.touch .dexov { z-index: 30; }
   }
   const overlay = $('overlay'), card = $('card');
   if (IS_TOUCH) document.body.appendChild(overlay); // menus sit above the HUD and command bar on phones
-  function showIntro() {
-    card.innerHTML = '<h1>Switchback Defense</h1><p>Hold the line against 85 enemy types, on two converging routes, medium escort bosses, and 10 major bosses. Build on hex cells. Place your first tower to start the wave countdown. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' +
-      '<div class="menuBtns"><button class="go" id="goBtn">Start</button><button class="go alt" id="dexBtn">Open Codex</button><button class="go alt" id="sndBtn" type="button"></button><button class="go alt" id="hapBtn" type="button"></button></div>' +
-      '<ul><li>Pick from three fire towers, each with three tiers, plus a Tesla coil that zaps, slows and reveals every enemy in range. Every upgrade costs more than the last, and a maxed tower can be mastered. The coil cannot be upgraded; repair it with gold instead. Special Attack costs $1,000 and launches a ground-only nuclear strike, with a 15-second real-time cooldown.</li>' +
+  /* ---------- Online leaderboard (Cloud Firestore, anonymous sign-in) ----------
+     Paste your Firebase web-app settings below (Firebase console > Project settings > Your apps). While they are empty the game
+     runs normally and the menu shows that the leaderboard is not set up. See firebase-setup.md for the database rules and index. */
+  const FIREBASE_CONFIG = { apiKey: '', authDomain: '', projectId: '', appId: '' };
+  const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} } };
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+  const LBAPI = {
+    configured: () => !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId),
+    init() {
+      if (this._p) return this._p;
+      this._p = (async () => {
+        const [A, Au, F] = await Promise.all([import(FIREBASE_SDK + 'firebase-app.js'), import(FIREBASE_SDK + 'firebase-auth.js'), import(FIREBASE_SDK + 'firebase-firestore.js')]);
+        const app = A.initializeApp(FIREBASE_CONFIG), auth = Au.getAuth(app);
+        await auth.authStateReady();
+        if (!auth.currentUser) await Au.signInAnonymously(auth);
+        this.F = F; this.db = F.getFirestore(app); this.uid = auth.currentUser.uid;
+      })();
+      this._p.catch(() => { this._p = null; }); // a failed start can be retried
+      return this._p;
+    },
+    // Top ten: highest wave first; on a tie the earlier score ranks higher.
+    async top() {
+      await withTimeout(this.init(), 12000);
+      const { collection, query, orderBy, limit, getDocs } = this.F;
+      const snap = await withTimeout(getDocs(query(collection(this.db, 'leaderboard'), orderBy('wave', 'desc'), orderBy('createdAt', 'asc'), limit(10))), 12000);
+      return { rows: snap.docs.map((d) => ({ id: d.id, name: String(d.data().name || ''), wave: Number(d.data().wave) || 0 })), uid: this.uid };
+    },
+    // One entry per player (document id = anonymous user id). A score never replaces a higher one.
+    async submit(name, wave) {
+      await withTimeout(this.init(), 12000);
+      const { doc, getDoc, setDoc, serverTimestamp } = this.F, ref = doc(this.db, 'leaderboard', this.uid);
+      const cur = await withTimeout(getDoc(ref), 12000);
+      if (cur.exists() && Number(cur.data().wave) >= wave) return { kept: true, wave: Number(cur.data().wave) };
+      await withTimeout(setDoc(ref, { name, wave, createdAt: serverTimestamp(), uid: this.uid }), 12000);
+      return { kept: false, wave };
+    }
+  };
+  let lbCache = null;
+  function paintBoard(c) {
+    const list = $('lbList'); if (!list) return;
+    list.textContent = '';
+    if (!c.rows.length) { const li = document.createElement('li'); li.className = 'msg'; li.textContent = 'No scores yet. Be the first on the board.'; list.appendChild(li); }
+    c.rows.forEach((r, i) => {
+      const li = document.createElement('li'); if (r.id === c.uid) li.className = 'me';
+      const rk = document.createElement('span'), nm = document.createElement('span'), wv = document.createElement('span');
+      rk.className = 'rk'; rk.textContent = i + 1; nm.className = 'nm'; nm.textContent = r.name; wv.className = 'wv'; wv.textContent = 'Wave ' + r.wave; // text only: names are user input
+      li.append(rk, nm, wv); list.appendChild(li);
+    });
+  }
+  async function loadBoard(force) {
+    const list = $('lbList'); if (!list) return;
+    const say = (t, retry) => {
+      list.textContent = ''; const li = document.createElement('li'); li.className = 'msg'; li.textContent = t;
+      if (retry) { const b = document.createElement('button'); b.className = 'link'; b.type = 'button'; b.textContent = 'Try again'; b.style.display = 'block'; b.style.margin = '8px auto 0'; b.addEventListener('click', () => loadBoard(true)); li.appendChild(b); }
+      list.appendChild(li);
+    };
+    if (!LBAPI.configured()) { say('The online leaderboard is not set up yet.'); return; }
+    if (lbCache && !force && performance.now() - lbCache.at < 30000) { paintBoard(lbCache); return; }
+    say('Loading scores…');
+    try { const r = await LBAPI.top(); lbCache = { at: performance.now(), rows: r.rows, uid: r.uid }; if ($('lbList') === list) paintBoard(lbCache); }
+    catch (e) { if ($('lbList') === list) say("Couldn't load the leaderboard.", true); }
+  }
+  const HOW_HTML = '<ul><li>Pick from three fire towers, each with three tiers, plus a Tesla coil that zaps, slows and reveals every enemy in range. Every upgrade costs more than the last, and a maxed tower can be mastered. The coil cannot be upgraded; repair it with gold instead. Nuke costs $1,000 and launches a ground-only nuclear strike, with a 15-second real-time cooldown. Kamikaze costs $1,000 and sends five planes, with its own 15-second cooldown: they hunt flyers first, then strike ground groups with a smaller four-hex blast at a quarter of the Nuke\'s power. Neither special attack can hurt your towers.</li>' +
       '<li>Every tower has health and every enemy can attack it, each pausing two to five seconds between strikes. Towers cannot be repaired, but any upgrade restores full health. After wave 30, some individual ground enemies spawn with a shield worth twice their health; Tesla zaps strip shields fastest. After five seconds in the air, flyers divert to the nearest tower and drop a freeze bomb that stops it firing for two to three seconds. A fully upgraded tower can buy a $500 shield equal to its total health; buy a new one once it breaks.</li>' +
       '<li>Waves overlap after 20 game seconds if enemies remain. Clearing the field early starts a three-second break.</li>' +
       '<li>One flier in each flying wave carries cargo. Destroy the last flier and the crate drops: tap it within three seconds for a bonus of 15% of your cash.</li>' +
       '<li>New units unlock as you survive. Open the Codex from this menu to read about each one.</li>' +
-      '<li>Keys: B build, U upgrade, S special attack, N send wave, F speed, 1–4 pick tower, Space pause. The Codex is available from this menu.</li></ul>' +
-      '';
+      '<li>Keys: B build, U upgrade, S nuke, K kamikaze, N send wave, F speed, 1–4 pick tower, Space pause. The Codex is available from this menu.</li></ul>' + '';
+  function showIntro() {
+    card.className = 'card menu';
+    const lbBest = parseInt(store.get('switchback-lb-best', '0'), 10) || 0;
+    card.innerHTML =
+      '<div class="menuMain">' +
+        '<div class="logo"><svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 3 41 13v20L23 43 5 33V13Z" fill="none" stroke="#51acdf" stroke-width="2"/><path d="M9 31h10V16h10v15h8" fill="none" stroke="#e3b668" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>' +
+        '<div class="t">Switchback<small>Defense</small></div></div>' +
+        '<p class="tag">Hold the line against 85 enemy types on converging hex routes.</p>' +
+        '<div class="stack"><button class="go" id="goBtn">Play</button>' +
+        '<div class="duo"><button class="go alt" id="howBtn">How to play</button><button class="go alt" id="dexBtn">Codex</button></div></div>' +
+        audioControls() +
+        '<div class="bestline">' + (best ? 'Best on this device: wave ' + best : 'Place your first tower to start the countdown.') + '</div>' +
+      '</div>' +
+      '<div class="menuBoard"><h2>Leaderboard<small>Top 10 by wave</small></h2><ol class="lb" id="lbList"><li class="msg">Loading scores…</li></ol>' +
+      '<div class="lbfoot"><span>' + (lbBest ? 'Your posted best: wave ' + lbBest : '') + '</span><button class="link" id="lbRefresh" type="button">Refresh</button></div></div>';
     overlay.hidden = false; bindAudioControls();
     $('goBtn').addEventListener('click', start); $('dexBtn').addEventListener('click', () => openCodex(true));
+    $('howBtn').addEventListener('click', showHow); $('lbRefresh').addEventListener('click', () => loadBoard(true));
+    loadBoard(false);
   }
+  function showHow() {
+    card.className = 'card';
+    card.innerHTML = '<h1>How to play</h1>' + '<p>Hold the line against 85 enemy types, on two converging routes, medium escort bosses, and 10 major bosses. Build on hex cells. Place your first tower to start the wave countdown. Enemy levels rise each wave; waves include random gaps and clustered groups. Every tenth wave is a boss.</p>' + HOW_HTML + '<button class="go" id="backBtn">Back to menu</button>';
+    overlay.hidden = false; $('backBtn').addEventListener('click', showIntro);
+  }
+  const cleanName = (v) => v.replace(/\s+/g, ' ').trim();
+  const NAME_OK = /^[A-Za-z0-9 _.\-]{3,12}$/;
   function endGame() {
     if (G.over) return;
     G.over = true;
-    if (G.wave > best) { best = G.wave; try { localStorage.setItem('switchback-best', String(best)); } catch (e) {} }
-    card.innerHTML = '<h1>Line breached</h1><div><p>You reached wave</p><div class="big">' + G.wave + '</div></div>' +
-      '<p>Best on this device: wave ' + best + '</p>' + audioControls() + '<button class="go" id="goBtn">Play again</button><button class="go alt" id="dexBtn">Open Codex</button>';
+    if (G.wave > best) { best = G.wave; store.set('switchback-best', best); }
+    const wave = G.wave, canPost = LBAPI.configured() && wave > (parseInt(store.get('switchback-lb-best', '0'), 10) || 0);
+    card.className = 'card';
+    card.innerHTML = '<h1>Line breached</h1><div><p>You reached wave</p><div class="big">' + wave + '</div></div>' +
+      '<p>Best on this device: wave ' + best + '</p>' +
+      (canPost ? '<form class="lbsubmit" id="lbForm" autocomplete="off"><label for="lbName">Post wave ' + wave + ' to the leaderboard</label>' +
+        '<input id="lbName" maxlength="12" placeholder="Your name (3 to 12 characters)" enterkeyhint="send" autocapitalize="words" spellcheck="false">' +
+        '<button class="go" id="lbSend" type="submit">Post score</button><div class="lbmsg" id="lbMsg" role="status" aria-live="polite"></div></form>' : '') +
+      '<button class="go" id="goBtn">Play again</button><div class="duo"><button class="go alt" id="menuBtn">Main menu</button><button class="go alt" id="dexBtn">Open Codex</button></div>' + audioControls();
     overlay.hidden = false; bindAudioControls(); SFX.play('gameOver');
-    $('goBtn').addEventListener('click', start); $('dexBtn').addEventListener('click', () => openCodex(true));
+    $('goBtn').addEventListener('click', start); $('dexBtn').addEventListener('click', () => openCodex(true)); $('menuBtn').addEventListener('click', showIntro);
+    const form = $('lbForm');
+    if (form) {
+      const input = $('lbName'), msg = $('lbMsg'), send = $('lbSend'), say = (t, k) => { msg.textContent = t; msg.className = 'lbmsg' + (k ? ' ' + k : ''); };
+      input.value = store.get('switchback-lb-name', '');
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const name = cleanName(input.value);
+        if (!NAME_OK.test(name)) { say('Use 3 to 12 letters, numbers, spaces, dots, dashes or underscores.', 'bad'); return; }
+        send.disabled = input.disabled = true; say('Posting…');
+        try {
+          const r = await LBAPI.submit(name, wave);
+          store.set('switchback-lb-name', name); store.set('switchback-lb-best', Math.max(r.wave, parseInt(store.get('switchback-lb-best', '0'), 10) || 0)); lbCache = null;
+          let rank = 0; try { const t = await LBAPI.top(); rank = t.rows.findIndex((x) => x.id === t.uid) + 1; lbCache = { at: performance.now(), rows: t.rows, uid: t.uid }; } catch (e) {}
+          say(r.kept ? 'You already have wave ' + r.wave + ' on the board.' : rank ? "Posted. You're #" + rank + ' on the leaderboard.' : 'Posted. Wave ' + wave + ' is on the board.', 'ok');
+          send.textContent = 'Posted';
+        } catch (e) { send.disabled = input.disabled = false; say("Couldn't post right now. Check your connection and try again.", 'bad'); }
+      });
+    }
   }
   function start() { reset(); G.started = true; overlay.hidden = true; }
 
   /* ---------- Loop ---------- */
   const GAME_PACE = 0.75; // the whole simulation runs at 75% of its original pace
   let last = performance.now(), acc = 0;
-  if(location.hash==='#qa') window.__gameQA={G,build,view,detected,hurt,burn,fireTower,doNuke,launchNuke,updateNukes,drawNukes,NUKE_COST,NUKE_RADIUS,NUKE_DAMAGE,NUKE_COOLDOWN,INVISIBLE_UNITS,MEDIUM_BOSSES,WAVE_OVERLAP_TICKS,flierGone,makeFlightPath,routeLen,get rivers(){return RIVERS},get waterCells(){return WATERSET},exteriorObjects,drawExterior,hexCenter,landHex,landCell,hexNeighbors,validHex,snap,placeGhost,tick,doNext,planWave,spawn,attack,special,UNITS,BOSSES,drawActor,drawTowerArt,SECTORS,setSector:i=>{setSector(i);path=MAP.map(([x,y])=>portrait?[y,x]:[x,y]);bgc=null;},get map(){return MAP},get mapB(){return MAPB},get routeB(){return pathB},get route(){return path},get pathCells(){return PATHSET},unproject,canPlace,project,toLocal,camera,makeTower,makeEnemy,startWave,start,layout,draw,get size(){return {W,H}}};
+  if(location.hash==='#qa') window.__gameQA={get MAP(){return MAP},get MAPB(){return MAPB},get MAPR(){return MAPR},get MERGE(){return MERGE},LBAPI,loadBoard,showIntro,showHow,endGame,doKami,updatePlanes,drawPlanes,KAMI_COST,KAMI_DAMAGE,KAMI_RADIUS,SFX,G,build,view,detected,hurt,burn,fireTower,doNuke,launchNuke,updateNukes,drawNukes,NUKE_COST,NUKE_RADIUS,NUKE_DAMAGE,NUKE_COOLDOWN,INVISIBLE_UNITS,MEDIUM_BOSSES,WAVE_OVERLAP_TICKS,flierGone,makeFlightPath,routeLen,get rivers(){return RIVERS},get waterCells(){return WATERSET},exteriorObjects,drawExterior,hexCenter,landHex,landCell,hexNeighbors,validHex,snap,placeGhost,tick,doNext,planWave,spawn,attack,special,UNITS,BOSSES,drawActor,drawTowerArt,SECTORS,setSector:i=>{setSector(i);path=MAP.map(([x,y])=>portrait?[y,x]:[x,y]);bgc=null;},get map(){return MAP},get mapB(){return MAPB},get routeB(){return pathB},get route(){return path},get pathCells(){return PATHSET},unproject,canPlace,project,toLocal,camera,makeTower,makeEnemy,startWave,start,layout,draw,get size(){return {W,H}}};
   function frame(now) {
     const dt = Math.min(100, now - last); last = now;
     if(G.started&&!G.over){updateNukes(performance.now());updateBombs(performance.now());}
